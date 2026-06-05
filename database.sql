@@ -1,0 +1,43 @@
+CREATE DATABASE IF NOT EXISTS alumni
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+USE alumni;
+
+CREATE TABLE IF NOT EXISTS admins (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS students (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    student_code VARCHAR(50) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    nickname VARCHAR(100) DEFAULT NULL,
+    generation VARCHAR(50) DEFAULT NULL,
+    faculty VARCHAR(150) DEFAULT NULL,
+    major VARCHAR(150) DEFAULT NULL,
+    phone VARCHAR(30) DEFAULT NULL,
+    facebook VARCHAR(150) DEFAULT NULL,
+    instagram VARCHAR(150) DEFAULT NULL,
+    line_id_contact VARCHAR(100) DEFAULT NULL,
+    parent_student_id INT UNSIGNED DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_students_parent
+        FOREIGN KEY (parent_student_id)
+        REFERENCES students(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO admins (username, password)
+VALUES (
+    'admin',
+    '$2y$10$ek0juWEDkK.gK.r9rbGxR.XgaorrNLzm6MbhJ345ReJl.6df8ncda'
+)
+ON DUPLICATE KEY UPDATE username = username;
