@@ -53,7 +53,7 @@ ob_start();
 
         <div class="rounded-md bg-slate-50 p-4 text-sm text-slate-700">
             Header ที่รองรับ:
-            <code>รหัสนักศึกษา ชื่อจริง นามสกุล ชื่อเล่น ปี คณะ สาขา เบอร์โทร facebook instagram line พี่รหัส</code>
+            <code>รหัสนักศึกษา , ชื่อจริง , นามสกุล , ชื่อเล่น , ปีการศึกษา , คณะ , สาขา , เบอร์โทร ,facebook , instagram , line id , รูป , สายรหัส</code>
         </div>
 
         <div class="flex gap-2">

@@ -80,8 +80,7 @@ ob_start();
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
                 <tr>
-                    <th class="px-4 py-3">รหัส</th>
-                    <th class="px-4 py-3">ชื่อ-สกุล</th>
+                    <th class="px-4 py-3">นักศึกษา</th>
                     <th class="px-4 py-3">รุ่น</th>
                     <th class="px-4 py-3">คณะ / สาขา</th>
                     <th class="px-4 py-3">โทร</th>
@@ -92,18 +91,25 @@ ob_start();
             <tbody class="divide-y divide-slate-100">
                 <?php if (empty($students)): ?>
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-500">ไม่พบข้อมูลนักศึกษา</td>
+                        <td colspan="6" class="px-4 py-8 text-center text-slate-500">ไม่พบข้อมูลนักศึกษา</td>
                     </tr>
                 <?php endif; ?>
 
                 <?php foreach ($students as $student): ?>
                     <tr>
-                        <td class="whitespace-nowrap px-4 py-3 font-medium"><?php echo h($student['student_code']); ?></td>
                         <td class="px-4 py-3">
-                            <?php echo h($student['first_name'] . ' ' . $student['last_name']); ?>
-                            <?php if ($student['nickname']): ?>
-                                <span class="text-slate-500">(<?php echo h($student['nickname']); ?>)</span>
-                            <?php endif; ?>
+                            <div class="flex items-center gap-3">
+                                <?php echo renderStudentAvatar($student, 'h-11 w-11'); ?>
+                                <div>
+                                    <p class="font-medium"><?php echo h($student['student_code']); ?></p>
+                                    <p class="text-sm text-slate-600">
+                                        <?php echo h($student['first_name'] . ' ' . $student['last_name']); ?>
+                                        <?php if ($student['nickname']): ?>
+                                            <span>(<?php echo h($student['nickname']); ?>)</span>
+                                        <?php endif; ?>
+                                    </p>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-4 py-3"><?php echo h($student['generation']); ?></td>
                         <td class="px-4 py-3"><?php echo h($student['faculty'] . ' / ' . $student['major']); ?></td>

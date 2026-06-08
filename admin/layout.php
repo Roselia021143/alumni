@@ -1,11 +1,6 @@
 <?php
 
-if (!function_exists('h')) {
-    function h($value)
-    {
-        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-    }
-}
+require_once __DIR__ . '/../classes/ViewHelper.php';
 
 function renderAdminLayout($title, $activeMenu, $content)
 {
@@ -30,7 +25,7 @@ function renderAdminLayout($title, $activeMenu, $content)
             <aside class="admin-sidebar">
                 <div class="admin-brand">
                     <p class="admin-brand-kicker">CIT Alumni</p>
-                    <h1>Alumni Code Line</h1>
+                    <h1>สายรหัส</h1>
                 </div>
 
                 <nav class="admin-nav" aria-label="Admin navigation">

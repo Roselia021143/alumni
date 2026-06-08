@@ -10,11 +10,29 @@ class Session
 
     public static function login($admin)
     {
+        self::adminLogin($admin);
+    }
+
+    public static function adminLogin($admin)
+    {
         self::start();
         session_regenerate_id(true);
 
+        $_SESSION['role'] = 'admin';
         $_SESSION['admin_id'] = $admin['id'];
         $_SESSION['admin_username'] = $admin['username'];
+        $_SESSION['last_activity'] = time();
+    }
+
+    public static function studentLogin($studentUser)
+    {
+        self::start();
+        session_regenerate_id(true);
+
+        $_SESSION['role'] = 'student';
+        $_SESSION['student_user_id'] = $studentUser['id'];
+        $_SESSION['student_id'] = $studentUser['student_id'];
+        $_SESSION['student_username'] = $studentUser['username'];
         $_SESSION['last_activity'] = time();
     }
 
@@ -41,23 +59,66 @@ class Session
 
     public static function isLoggedIn()
     {
+        return self::isAdminLoggedIn();
+    }
+
+    public static function isAdminLoggedIn()
+    {
         self::start();
-        return isset($_SESSION['admin_id']);
+        return isset($_SESSION['admin_id']) && self::role() === 'admin';
+    }
+
+    public static function isStudentLoggedIn()
+    {
+        self::start();
+        return isset($_SESSION['student_id']) && self::role() === 'student';
     }
 
     public static function requireLogin()
     {
-        if (!self::isLoggedIn()) {
-            self::flash('error', 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
+        self::requireAdminLogin();
+    }
+
+    public static function requireAdminLogin()
+    {
+        if (!self::isAdminLoggedIn()) {
+            self::flash('error', 'กรุณาเข้าสู่ระบบผู้ดูแลก่อนใช้งาน');
             header('Location: login.php');
             exit;
         }
+    }
+
+    public static function requireStudentLogin()
+    {
+        if (!self::isStudentLoggedIn()) {
+            self::flash('error', 'กรุณาเข้าสู่ระบบนักศึกษาก่อนใช้งาน');
+            header('Location: login.php');
+            exit;
+        }
+    }
+
+    public static function role()
+    {
+        self::start();
+        return isset($_SESSION['role']) ? $_SESSION['role'] : '';
     }
 
     public static function adminUsername()
     {
         self::start();
         return isset($_SESSION['admin_username']) ? $_SESSION['admin_username'] : '';
+    }
+
+    public static function studentId()
+    {
+        self::start();
+        return isset($_SESSION['student_id']) ? (int) $_SESSION['student_id'] : 0;
+    }
+
+    public static function studentUsername()
+    {
+        self::start();
+        return isset($_SESSION['student_username']) ? $_SESSION['student_username'] : '';
     }
 
     public static function flash($key, $message = null)
@@ -90,7 +151,7 @@ class Session
             self::logout();
             self::start();
             self::flash('error', 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง');
-            header('Location: login.php');
+            header('Location: /alumni/index.php');
             exit;
         }
 

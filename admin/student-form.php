@@ -28,6 +28,7 @@ $defaults = [
     'instagram' => '',
     'line_id_contact' => '',
     'parent_student_id' => '',
+    'profile_image' => '',
 ];
 $student = $student ? array_merge($defaults, $student) : $defaults;
 $title = $id ? 'แก้ไขนักศึกษา' : 'เพิ่มนักศึกษา';
@@ -52,6 +53,7 @@ ob_start();
             ['instagram', 'Instagram', 'text', false],
             ['line_id_contact', 'Line ID', 'text', false],
             ['parent_student_id', 'รหัสนักศึกษาของพี่รหัส', 'text', false],
+            ['profile_image', 'URL หรือ path รูปโปรไฟล์', 'text', false],
         ];
         ?>
 

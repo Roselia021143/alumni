@@ -6,6 +6,7 @@ class Student
 {
     private $conn;
     private $studentUser;
+    private $hasProfileImageColumn;
 
     public function __construct(mysqli $conn)
     {
@@ -134,31 +135,111 @@ class Student
         ];
     }
 
+    public function getLineagePreview($id, $limit = 5)
+    {
+        $lineage = $this->getLineage($id);
+
+        if (!$lineage) {
+            return null;
+        }
+
+        $lineage['ancestors'] = array_values(array_filter($lineage['ancestors'], function ($student) use ($limit) {
+            return (int) $student['line_level'] <= $limit;
+        }));
+        $lineage['descendants'] = array_values(array_filter($lineage['descendants'], function ($student) use ($limit) {
+            return (int) $student['line_level'] <= $limit;
+        }));
+
+        return $lineage;
+    }
+
+    public function getLineagePage($id, $direction, $limit, $offset)
+    {
+        $lineage = $this->getLineage($id);
+
+        if (!$lineage) {
+            return null;
+        }
+
+        $items = $direction === 'up' ? $lineage['ancestors'] : $lineage['descendants'];
+
+        return [
+            'student' => $lineage['student'],
+            'items' => array_slice($items, $offset, $limit),
+            'total' => count($items),
+        ];
+    }
+
+    public function isInLineage($ownerStudentId, $targetStudentId)
+    {
+        if ((int) $ownerStudentId === (int) $targetStudentId) {
+            return true;
+        }
+
+        $lineage = $this->getLineage($ownerStudentId);
+
+        if (!$lineage) {
+            return false;
+        }
+
+        foreach (array_merge($lineage['ancestors'], $lineage['descendants']) as $student) {
+            if ((int) $student['id'] === (int) $targetStudentId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function create($data, $createUser = true)
     {
         $data = $this->normalize($data);
         $parentId = $this->resolveParentId($data['parent_student_id']);
 
-        $stmt = $this->conn->prepare(
-            'INSERT INTO students
-             (student_code, first_name, last_name, nickname, generation, faculty, major, phone, facebook, instagram, line_id_contact, parent_student_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->bind_param(
-            'ssssissssssi',
-            $data['student_code'],
-            $data['first_name'],
-            $data['last_name'],
-            $data['nickname'],
-            $data['generation'],
-            $data['faculty'],
-            $data['major'],
-            $data['phone'],
-            $data['facebook'],
-            $data['instagram'],
-            $data['line_id_contact'],
-            $parentId
-        );
+        if ($this->hasProfileImageColumn()) {
+            $stmt = $this->conn->prepare(
+                'INSERT INTO students
+                 (student_code, first_name, last_name, nickname, generation, faculty, major, phone, facebook, instagram, line_id_contact, parent_student_id, profile_image)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->bind_param(
+                'ssssissssssis',
+                $data['student_code'],
+                $data['first_name'],
+                $data['last_name'],
+                $data['nickname'],
+                $data['generation'],
+                $data['faculty'],
+                $data['major'],
+                $data['phone'],
+                $data['facebook'],
+                $data['instagram'],
+                $data['line_id_contact'],
+                $parentId,
+                $data['profile_image']
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                'INSERT INTO students
+                 (student_code, first_name, last_name, nickname, generation, faculty, major, phone, facebook, instagram, line_id_contact, parent_student_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->bind_param(
+                'ssssissssssi',
+                $data['student_code'],
+                $data['first_name'],
+                $data['last_name'],
+                $data['nickname'],
+                $data['generation'],
+                $data['faculty'],
+                $data['major'],
+                $data['phone'],
+                $data['facebook'],
+                $data['instagram'],
+                $data['line_id_contact'],
+                $parentId
+            );
+        }
         $stmt->execute();
         $studentId = $this->conn->insert_id;
         $stmt->close();
@@ -175,28 +256,54 @@ class Student
         $data = $this->normalize($data);
         $parentId = $this->resolveParentId($data['parent_student_id'], $id);
 
-        $stmt = $this->conn->prepare(
-            'UPDATE students
-             SET student_code = ?, first_name = ?, last_name = ?, nickname = ?, generation = ?,
-                 faculty = ?, major = ?, phone = ?, facebook = ?, instagram = ?, line_id_contact = ?, parent_student_id = ?
-             WHERE id = ?'
-        );
-        $stmt->bind_param(
-            'ssssissssssii',
-            $data['student_code'],
-            $data['first_name'],
-            $data['last_name'],
-            $data['nickname'],
-            $data['generation'],
-            $data['faculty'],
-            $data['major'],
-            $data['phone'],
-            $data['facebook'],
-            $data['instagram'],
-            $data['line_id_contact'],
-            $parentId,
-            $id
-        );
+        if ($this->hasProfileImageColumn()) {
+            $stmt = $this->conn->prepare(
+                'UPDATE students
+                 SET student_code = ?, first_name = ?, last_name = ?, nickname = ?, generation = ?,
+                     faculty = ?, major = ?, phone = ?, facebook = ?, instagram = ?, line_id_contact = ?, parent_student_id = ?, profile_image = ?
+                 WHERE id = ?'
+            );
+            $stmt->bind_param(
+                'ssssissssssisi',
+                $data['student_code'],
+                $data['first_name'],
+                $data['last_name'],
+                $data['nickname'],
+                $data['generation'],
+                $data['faculty'],
+                $data['major'],
+                $data['phone'],
+                $data['facebook'],
+                $data['instagram'],
+                $data['line_id_contact'],
+                $parentId,
+                $data['profile_image'],
+                $id
+            );
+        } else {
+            $stmt = $this->conn->prepare(
+                'UPDATE students
+                 SET student_code = ?, first_name = ?, last_name = ?, nickname = ?, generation = ?,
+                     faculty = ?, major = ?, phone = ?, facebook = ?, instagram = ?, line_id_contact = ?, parent_student_id = ?
+                 WHERE id = ?'
+            );
+            $stmt->bind_param(
+                'ssssissssssii',
+                $data['student_code'],
+                $data['first_name'],
+                $data['last_name'],
+                $data['nickname'],
+                $data['generation'],
+                $data['faculty'],
+                $data['major'],
+                $data['phone'],
+                $data['facebook'],
+                $data['instagram'],
+                $data['line_id_contact'],
+                $parentId,
+                $id
+            );
+        }
         $stmt->execute();
         $stmt->close();
     }
@@ -284,6 +391,7 @@ class Student
             'instagram' => isset($data['instagram']) ? trim($data['instagram']) : '',
             'line_id_contact' => isset($data['line_id_contact']) ? trim($data['line_id_contact']) : '',
             'parent_student_id' => isset($data['parent_student_id']) ? trim($data['parent_student_id']) : '',
+            'profile_image' => isset($data['profile_image']) ? trim($data['profile_image']) : '',
         ];
     }
 
@@ -404,7 +512,7 @@ class Student
         $allowed = [
             'student_code', 'first_name', 'last_name', 'nickname', 'generation',
             'faculty', 'major', 'phone', 'facebook', 'instagram',
-            'line_id_contact', 'parent_student_id',
+            'line_id_contact', 'parent_student_id', 'profile_image',
         ];
         $data = array_fill_keys($allowed, '');
 
@@ -418,5 +526,17 @@ class Student
         }
 
         return $data;
+    }
+
+    private function hasProfileImageColumn()
+    {
+        if ($this->hasProfileImageColumn !== null) {
+            return $this->hasProfileImageColumn;
+        }
+
+        $result = $this->conn->query("SHOW COLUMNS FROM students LIKE 'profile_image'");
+        $this->hasProfileImageColumn = $result && $result->num_rows > 0;
+
+        return $this->hasProfileImageColumn;
     }
 }

@@ -30,9 +30,14 @@ function renderStudentCard($student, $label)
 {
     ?>
     <article class="rounded-md border border-slate-200 bg-white p-4">
-        <p class="text-xs font-semibold text-teal-700"><?php echo h($label); ?></p>
-        <h4 class="mt-1 font-semibold"><?php echo h($student['student_code']); ?> - <?php echo h(studentName($student)); ?></h4>
-        <p class="mt-1 text-sm text-slate-600">รุ่น <?php echo h($student['generation']); ?></p>
+        <div class="flex items-center gap-3">
+            <?php echo renderStudentAvatar($student, 'h-11 w-11'); ?>
+            <div>
+                <p class="text-xs font-semibold text-teal-700"><?php echo h($label); ?></p>
+                <h4 class="mt-1 font-semibold"><?php echo h($student['student_code']); ?> - <?php echo h(studentName($student)); ?></h4>
+                <p class="mt-1 text-sm text-slate-600">รุ่น <?php echo h($student['generation']); ?></p>
+            </div>
+        </div>
     </article>
     <?php
 }
@@ -44,11 +49,16 @@ $descendants = $lineage['descendants'];
 ob_start();
 ?>
 <section class="mb-6 rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-    <p class="text-sm font-medium text-slate-500">นักศึกษาปัจจุบัน</p>
-    <h3 class="mt-1 text-2xl font-bold"><?php echo h($student['student_code']); ?> - <?php echo h(studentName($student)); ?></h3>
-    <p class="mt-2 text-sm text-slate-600">
-        รุ่น <?php echo h($student['generation']); ?> · <?php echo h($student['faculty']); ?> / <?php echo h($student['major']); ?>
-    </p>
+    <div class="flex items-center gap-4">
+        <?php echo renderStudentAvatar($student, 'h-20 w-20'); ?>
+        <div>
+            <p class="text-sm font-medium text-slate-500">นักศึกษาปัจจุบัน</p>
+            <h3 class="mt-1 text-2xl font-bold"><?php echo h($student['student_code']); ?> - <?php echo h(studentName($student)); ?></h3>
+            <p class="mt-2 text-sm text-slate-600">
+                รุ่น <?php echo h($student['generation']); ?> · <?php echo h($student['faculty']); ?> / <?php echo h($student['major']); ?>
+            </p>
+        </div>
+    </div>
 </section>
 
 <div class="grid gap-6 lg:grid-cols-2">
