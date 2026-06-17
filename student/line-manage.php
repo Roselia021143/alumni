@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if (isset($_POST['parent_student_code']) && trim($_POST['parent_student_code']) !== '') {
             $studentModel->linkParentByCode($studentId, $_POST['parent_student_code']);
-            $success = 'บันทึกพี่รหัสเรียบร้อยแล้ว';
+            $success = 'บันทึกพี่รหัสเรียบร้อยแล้ว ระบบจะแสดงคุณเป็นน้องรหัสในฝั่งพี่รหัสอัตโนมัติ';
         }
 
         if (isset($_POST['child_student_code']) && trim($_POST['child_student_code']) !== '') {
@@ -34,11 +34,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $studentModel->linkChildByCode($studentId, $_POST['child_student_code']);
-            $success = 'บันทึกน้องรหัสเรียบร้อยแล้ว';
+            $success = 'บันทึกน้องรหัสเรียบร้อยแล้ว ระบบจะแสดงน้องรหัสในสายของคุณอัตโนมัติ';
         }
     } catch (Exception $exception) {
         $error = $exception->getMessage();
     }
+}
+
+$lineage = $studentModel->getLineage($studentId);
+$currentParent = null;
+$directChildren = [];
+
+if ($lineage) {
+    foreach ($lineage['ancestors'] as $ancestor) {
+        if ((int) $ancestor['line_level'] === 1) {
+            $currentParent = $ancestor;
+            break;
+        }
+    }
+
+    foreach ($lineage['descendants'] as $descendant) {
+        if ((int) $descendant['line_level'] === 1) {
+            $directChildren[] = $descendant;
+        }
+    }
+}
+
+function lineManageName($student)
+{
+    $name = trim((string) $student['first_name'] . ' ' . (string) $student['last_name']);
+
+    if (!empty($student['nickname'])) {
+        $name .= ' (' . $student['nickname'] . ')';
+    }
+
+    return $name !== '' ? $name : $student['student_code'];
 }
 
 ob_start();
@@ -76,6 +106,34 @@ ob_start();
             <button type="submit" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">บันทึกสายรหัส</button>
         </div>
     </form>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <div class="rounded-md bg-slate-50 p-4">
+            <p class="text-xs font-semibold text-teal-700">พี่รหัสปัจจุบัน</p>
+            <?php if ($currentParent): ?>
+                <p class="mt-2 font-semibold"><?php echo h($currentParent['student_code']); ?> - <?php echo h(lineManageName($currentParent)); ?></p>
+                <p class="mt-1 text-sm text-slate-600">ข้อมูลนี้ถูก sync จากค่า parent_student_id ของคุณ</p>
+            <?php else: ?>
+                <p class="mt-2 text-sm text-slate-500">ยังไม่ได้ผูกพี่รหัส</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="rounded-md bg-slate-50 p-4">
+            <p class="text-xs font-semibold text-teal-700">น้องรหัสที่ sync แล้ว</p>
+            <?php if (empty($directChildren)): ?>
+                <p class="mt-2 text-sm text-slate-500">ยังไม่มีน้องรหัสที่ผูกมายังคุณ</p>
+            <?php else: ?>
+                <div class="mt-3 space-y-2">
+                    <?php foreach ($directChildren as $child): ?>
+                        <div class="rounded-md border border-slate-200 px-3 py-2 text-sm">
+                            <span class="font-semibold"><?php echo h($child['student_code']); ?></span>
+                            <span class="text-slate-600">- <?php echo h(lineManageName($child)); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </section>
 <?php
 $content = ob_get_clean();

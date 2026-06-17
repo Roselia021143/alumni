@@ -296,6 +296,16 @@ class Student
         return (int) $prefix;
     }
 
+    private function assertDifferentGeneration($studentCode, $targetStudentCode)
+    {
+        $studentGeneration = $this->generationFromStudentCode($studentCode);
+        $targetGeneration = $this->generationFromStudentCode($targetStudentCode);
+
+        if ($studentGeneration > 0 && $targetGeneration > 0 && $studentGeneration === $targetGeneration) {
+            throw new RuntimeException('ไม่สามารถผูกพี่รหัสหรือน้องรหัสที่อยู่ปีการศึกษาเดียวกันได้');
+        }
+    }
+
     public function studentYearLevel($studentCode, $currentAcademicYear)
     {
         $admissionYear = $this->admissionYearFromCode($studentCode);
@@ -321,6 +331,8 @@ class Student
             throw new RuntimeException('ไม่พบข้อมูลพี่รหัส หรือรหัสไม่ถูกต้อง');
         }
 
+        $this->assertDifferentGeneration($student['student_code'], $parent['student_code']);
+
         $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
         $parentId = (int) $parent['id'];
         $stmt->bind_param('ii', $parentId, $studentId);
@@ -338,6 +350,8 @@ class Student
         if (!$student || !$child || (int) $student['id'] === (int) $child['id']) {
             throw new RuntimeException('ไม่พบข้อมูลน้องรหัส หรือรหัสไม่ถูกต้อง');
         }
+
+        $this->assertDifferentGeneration($student['student_code'], $child['student_code']);
 
         $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
         $stmt->bind_param('ii', $studentId, $child['id']);
