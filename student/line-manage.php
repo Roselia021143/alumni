@@ -91,7 +91,16 @@ ob_start();
     <form method="post" class="mt-6 grid gap-5 md:grid-cols-2">
         <div>
             <label for="parent_student_code" class="mb-2 block text-sm font-medium">รหัสนักศึกษาของพี่รหัส</label>
-            <input id="parent_student_code" name="parent_student_code" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="เช่น 65113532012">
+            <input
+                id="parent_student_code"
+                name="parent_student_code"
+                <?php echo $currentParent ? 'disabled' : ''; ?>
+                class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm <?php echo $currentParent ? 'bg-slate-100 text-slate-400' : ''; ?>"
+                placeholder="<?php echo $currentParent ? 'มีพี่รหัสอยู่แล้ว' : 'เช่น 65113532012'; ?>"
+            >
+            <?php if ($currentParent): ?>
+                <p class="mt-2 text-xs text-slate-500">คุณมีพี่รหัสอยู่แล้ว หากต้องการเปลี่ยนพี่รหัสกรุณาติดต่อผู้ดูแลระบบ</p>
+            <?php endif; ?>
         </div>
 
         <div>

@@ -331,6 +331,10 @@ class Student
             throw new RuntimeException('ไม่พบข้อมูลพี่รหัส หรือรหัสไม่ถูกต้อง');
         }
 
+        if (!empty($student['parent_student_id'])) {
+            throw new RuntimeException('คุณมีพี่รหัสอยู่แล้ว หากต้องการเปลี่ยนพี่รหัสกรุณาติดต่อผู้ดูแลระบบ');
+        }
+
         $this->assertDifferentGeneration($student['student_code'], $parent['student_code']);
 
         $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
