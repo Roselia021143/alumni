@@ -21,19 +21,24 @@ if (!$student) {
     exit;
 }
 
+$isOwner = (int) $ownerStudentId === (int) $targetStudentId;
 $fields = [
-    'รหัสนักศึกษา' => 'student_code',
-    'ชื่อ' => 'first_name',
-    'นามสกุล' => 'last_name',
-    'ชื่อเล่น' => 'nickname',
-    'ปีการศึกษา' => 'generation',
-    'คณะ' => 'faculty',
-    'สาขา' => 'major',
-    'เบอร์โทร' => 'phone',
-    'Facebook' => 'facebook',
-    'Instagram' => 'instagram',
-    'Line ID' => 'line_id_contact',
+    ['รหัสนักศึกษา', 'student_code', 'student_code_visible'],
+    ['ชื่อ', 'first_name', null],
+    ['นามสกุล', 'last_name', null],
+    ['ชื่อเล่น', 'nickname', null],
+    ['ปีการศึกษา', 'generation', 'generation_visible'],
+    ['คณะ', 'faculty', null],
+    ['สาขา', 'major', null],
+    ['เบอร์โทร', 'phone', 'phone_visible'],
+    ['Facebook', 'facebook', 'facebook_visible'],
+    ['Instagram', 'instagram', 'instagram_visible'],
+    ['Line ID', 'line_id_contact', 'line_id_contact_visible'],
 ];
+
+if (!$isOwner && isset($student['profile_image_visible']) && (int) $student['profile_image_visible'] === 0) {
+    $student['profile_image'] = '';
+}
 
 ob_start();
 ?>
@@ -50,7 +55,16 @@ ob_start();
     </div>
 
     <dl class="grid gap-4 md:grid-cols-2">
-        <?php foreach ($fields as $label => $field): ?>
+        <?php foreach ($fields as $fieldConfig): ?>
+            <?php
+            $label = $fieldConfig[0];
+            $field = $fieldConfig[1];
+            $visibleField = $fieldConfig[2];
+
+            if (!$isOwner && $visibleField !== null && empty($student[$visibleField])) {
+                continue;
+            }
+            ?>
             <div class="rounded-md bg-slate-50 p-4">
                 <dt class="text-xs font-semibold text-slate-500"><?php echo h($label); ?></dt>
                 <dd class="mt-1 font-medium"><?php echo h($student[$field]); ?></dd>

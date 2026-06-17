@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../classes/Session.php';
 require_once __DIR__ . '/../classes/StudentUser.php';
+require_once __DIR__ . '/../classes/Student.php';
 
 Session::start();
 
@@ -18,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = isset($_POST['password']) ? $_POST['password'] : '';
 
     $studentUser = new StudentUser($conn);
+    $studentModel = new Student($conn);
     $authenticatedUser = $studentUser->authenticate($username, $password);
 
     if ($authenticatedUser) {
@@ -26,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $error = 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง';
+    $error = $studentModel->findByCode($username) ? 'รหัสผ่านไม่ถูกต้อง' : 'รหัสนักศึกษาไม่ถูกต้อง';
 }
 ?>
 <!DOCTYPE html>
@@ -60,11 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div>
                     <label for="password" class="mb-2 block text-sm font-medium">รหัสผ่าน</label>
                     <input id="password" name="password" type="password" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100">
-                    <p class="mt-2 text-xs text-slate-500">รหัสผ่านเริ่มต้นคือเบอร์โทรศัพท์ที่บันทึกไว้</p>
+                    <p class="mt-2 text-xs text-slate-500">ใช้รหัสผ่านที่ตั้งไว้ตอนสมัครสมาชิก</p>
                 </div>
                 <button type="submit" class="w-full rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800">เข้าสู่ระบบ</button>
             </form>
-            <a href="../index.php" class="mt-5 block text-center text-sm text-slate-600 hover:text-teal-700">กลับหน้าเลือกประเภทผู้ใช้</a>
+            <div class="mt-5 space-y-2 text-center text-sm">
+                <a href="register.php" class="block font-semibold text-teal-700 hover:underline">สมัครสมาชิกนักศึกษา</a>
+                <a href="../index.php" class="block text-slate-600 hover:text-teal-700">กลับหน้าเลือกประเภทผู้ใช้</a>
+            </div>
         </section>
     </main>
 </body>

@@ -191,6 +191,218 @@ class Student
         return false;
     }
 
+    public function createRegistration($data, $password)
+    {
+        $studentCode = isset($data['student_code']) ? trim($data['student_code']) : '';
+        $email = isset($data['email']) ? trim($data['email']) : '';
+
+        if ($studentCode === '') {
+            throw new RuntimeException('กรุณากรอกรหัสนักศึกษา');
+        }
+
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new RuntimeException('กรุณากรอก Email ให้ถูกต้อง');
+        }
+
+        if ($this->findByCode($studentCode)) {
+            throw new RuntimeException('รหัสนักศึกษานี้มีอยู่ในระบบแล้ว');
+        }
+
+        if ($this->studentUser->emailExists($email)) {
+            throw new RuntimeException('Email นี้ถูกใช้สมัครแล้ว');
+        }
+
+        $registrationData = [
+            'student_code' => $studentCode,
+            'first_name' => '',
+            'last_name' => '',
+            'nickname' => '',
+            'generation' => $this->generationFromStudentCode($studentCode),
+            'faculty' => '',
+            'major' => '',
+            'phone' => '',
+            'facebook' => '',
+            'instagram' => '',
+            'line_id_contact' => '',
+            'parent_student_id' => '',
+            'profile_image' => '',
+        ];
+
+        $studentId = $this->create($registrationData, false);
+
+        if (!$this->studentUser->createUser($studentId, $studentCode, $password, $email)) {
+            throw new RuntimeException('ไม่สามารถสร้างบัญชีผู้ใช้ได้');
+        }
+
+        return $studentId;
+    }
+
+    public function updateOwnProfile($id, $data)
+    {
+        $data = $this->normalize($data);
+
+        $stmt = $this->conn->prepare(
+            'UPDATE students
+             SET first_name = ?, last_name = ?, nickname = ?, faculty = ?, major = ?,
+                 phone = ?, facebook = ?, instagram = ?, line_id_contact = ?, profile_image = ?,
+                 student_code_visible = ?, generation_visible = ?, phone_visible = ?,
+                 facebook_visible = ?, instagram_visible = ?, line_id_contact_visible = ?, profile_image_visible = ?
+             WHERE id = ?'
+        );
+        $stmt->bind_param(
+            'ssssssssssiiiiiiii',
+            $data['first_name'],
+            $data['last_name'],
+            $data['nickname'],
+            $data['faculty'],
+            $data['major'],
+            $data['phone'],
+            $data['facebook'],
+            $data['instagram'],
+            $data['line_id_contact'],
+            $data['profile_image'],
+            $data['student_code_visible'],
+            $data['generation_visible'],
+            $data['phone_visible'],
+            $data['facebook_visible'],
+            $data['instagram_visible'],
+            $data['line_id_contact_visible'],
+            $data['profile_image_visible'],
+            $id
+        );
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    public function admissionYearFromCode($studentCode)
+    {
+        $prefix = substr(trim((string) $studentCode), 0, 2);
+
+        if (!ctype_digit($prefix)) {
+            return 0;
+        }
+
+        return 2500 + (int) $prefix;
+    }
+
+    private function generationFromStudentCode($studentCode)
+    {
+        $prefix = substr(trim((string) $studentCode), 0, 2);
+
+        if (!ctype_digit($prefix)) {
+            return 0;
+        }
+
+        return (int) $prefix;
+    }
+
+    public function studentYearLevel($studentCode, $currentAcademicYear)
+    {
+        $admissionYear = $this->admissionYearFromCode($studentCode);
+
+        if ($admissionYear <= 0) {
+            return 0;
+        }
+
+        return max(1, (int) $currentAcademicYear - $admissionYear + 1);
+    }
+
+    public function canManageChildCode($studentCode, $currentAcademicYear)
+    {
+        return $this->studentYearLevel($studentCode, $currentAcademicYear) >= 2;
+    }
+
+    public function linkParentByCode($studentId, $parentStudentCode)
+    {
+        $student = $this->find($studentId);
+        $parent = $this->findByCode($parentStudentCode);
+
+        if (!$student || !$parent || (int) $student['id'] === (int) $parent['id']) {
+            throw new RuntimeException('ไม่พบข้อมูลพี่รหัส หรือรหัสไม่ถูกต้อง');
+        }
+
+        $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
+        $parentId = (int) $parent['id'];
+        $stmt->bind_param('ii', $parentId, $studentId);
+        $stmt->execute();
+        $stmt->close();
+
+        $this->recordLineRequest($studentId, $parentStudentCode, 'parent');
+    }
+
+    public function linkChildByCode($studentId, $childStudentCode)
+    {
+        $student = $this->find($studentId);
+        $child = $this->findByCode($childStudentCode);
+
+        if (!$student || !$child || (int) $student['id'] === (int) $child['id']) {
+            throw new RuntimeException('ไม่พบข้อมูลน้องรหัส หรือรหัสไม่ถูกต้อง');
+        }
+
+        $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
+        $stmt->bind_param('ii', $studentId, $child['id']);
+        $stmt->execute();
+        $stmt->close();
+
+        $this->recordLineRequest($studentId, $childStudentCode, 'child');
+    }
+
+    public function getTree($id, $upDepth = null, $downDepth = null)
+    {
+        $lineage = $this->getLineage($id);
+
+        if (!$lineage) {
+            return null;
+        }
+
+        $ancestors = $lineage['ancestors'];
+        $descendants = $lineage['descendants'];
+
+        if ($upDepth !== null) {
+            $ancestors = array_values(array_filter($ancestors, function ($student) use ($upDepth) {
+                return (int) $student['line_level'] <= (int) $upDepth;
+            }));
+        }
+
+        if ($downDepth !== null) {
+            $descendants = array_values(array_filter($descendants, function ($student) use ($downDepth) {
+                return (int) $student['line_level'] <= (int) $downDepth;
+            }));
+        }
+
+        $root = $lineage['student'];
+        $root['line_level'] = 0;
+
+        return [
+            'ancestors' => array_reverse($ancestors),
+            'root' => $root,
+            'children_by_parent' => $this->groupByParent($descendants),
+        ];
+    }
+
+    public function dashboardStats()
+    {
+        $totalStudents = $this->countAll('');
+        $roots = $this->lineRoots();
+        $lines = [];
+
+        foreach ($roots as $root) {
+            $lineage = $this->getLineage((int) $root['id']);
+            $count = $lineage ? count($lineage['descendants']) + 1 : 1;
+            $lines[] = [
+                'student' => $root,
+                'count' => $count,
+                'percent' => $totalStudents > 0 ? round(($count / $totalStudents) * 100, 2) : 0,
+            ];
+        }
+
+        return [
+            'total_students' => $totalStudents,
+            'total_lines' => count($lines),
+            'lines' => $lines,
+        ];
+    }
+
     public function create($data, $createUser = true)
     {
         $data = $this->normalize($data);
@@ -328,6 +540,7 @@ class Student
         $imported = 0;
         $updated = 0;
         $createdUsers = 0;
+        $skippedDuplicates = 0;
         $rowsToLink = [];
 
         while (($row = fgetcsv($handle)) !== false) {
@@ -337,16 +550,13 @@ class Student
                 continue;
             }
 
-            $rowsToLink[] = $data;
             $existing = $this->findByCode($data['student_code']);
 
             if ($existing) {
-                $this->update((int) $existing['id'], $data);
-                if ($this->studentUser->createDefaultUser((int) $existing['id'], $data['student_code'], $data['phone'])) {
-                    $createdUsers++;
-                }
-                $updated++;
+                $skippedDuplicates++;
+                continue;
             } else {
+                $rowsToLink[] = $data;
                 $studentId = $this->create($data, false);
                 if ($this->studentUser->createDefaultUser($studentId, $data['student_code'], $data['phone'])) {
                     $createdUsers++;
@@ -373,6 +583,7 @@ class Student
             'imported' => $imported,
             'updated' => $updated,
             'created_users' => $createdUsers,
+            'skipped_duplicates' => $skippedDuplicates,
         ];
     }
 
@@ -392,6 +603,13 @@ class Student
             'line_id_contact' => isset($data['line_id_contact']) ? trim($data['line_id_contact']) : '',
             'parent_student_id' => isset($data['parent_student_id']) ? trim($data['parent_student_id']) : '',
             'profile_image' => isset($data['profile_image']) ? trim($data['profile_image']) : '',
+            'student_code_visible' => isset($data['student_code_visible']) ? 1 : 0,
+            'generation_visible' => isset($data['generation_visible']) ? 1 : 0,
+            'phone_visible' => isset($data['phone_visible']) ? 1 : 0,
+            'facebook_visible' => isset($data['facebook_visible']) ? 1 : 0,
+            'instagram_visible' => isset($data['instagram_visible']) ? 1 : 0,
+            'line_id_contact_visible' => isset($data['line_id_contact_visible']) ? 1 : 0,
+            'profile_image_visible' => isset($data['profile_image_visible']) ? 1 : 0,
         ];
     }
 
@@ -505,6 +723,57 @@ class Student
 
         $stmt->close();
         return $children;
+    }
+
+    private function groupByParent($students)
+    {
+        $childrenByParent = [];
+
+        foreach ($students as $student) {
+            $parentId = isset($student['parent_student_id']) ? (int) $student['parent_student_id'] : 0;
+
+            if (!isset($childrenByParent[$parentId])) {
+                $childrenByParent[$parentId] = [];
+            }
+
+            $childrenByParent[$parentId][] = $student;
+        }
+
+        return $childrenByParent;
+    }
+
+    private function lineRoots()
+    {
+        $result = $this->conn->query(
+            'SELECT *
+             FROM students
+             WHERE parent_student_id IS NULL
+             ORDER BY generation ASC, student_code ASC'
+        );
+        $roots = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $roots[] = $row;
+        }
+
+        return $roots;
+    }
+
+    private function recordLineRequest($requesterStudentId, $targetStudentCode, $direction)
+    {
+        $exists = $this->conn->query("SHOW TABLES LIKE 'student_line_requests'");
+
+        if (!$exists || $exists->num_rows === 0) {
+            return;
+        }
+
+        $stmt = $this->conn->prepare(
+            'INSERT INTO student_line_requests (requester_student_id, target_student_code, direction, status)
+             VALUES (?, ?, ?, "approved")'
+        );
+        $stmt->bind_param('iss', $requesterStudentId, $targetStudentCode, $direction);
+        $stmt->execute();
+        $stmt->close();
     }
 
     private function mapCsvRow($headers, $row)

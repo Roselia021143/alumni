@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         try {
             $result = $studentModel->importCsv($_FILES['csv_file']['tmp_name']);
-            $resultText = 'Import ใหม่ ' . $result['imported'] . ' รายการ, อัปเดต ' . $result['updated'] . ' รายการ, สร้างบัญชีผู้ใช้ ' . $result['created_users'] . ' รายการ';
+            $resultText = 'Import ใหม่ ' . $result['imported'] . ' รายการ, ข้ามรหัสซ้ำ ' . $result['skipped_duplicates'] . ' รายการ, สร้างบัญชีผู้ใช้ ' . $result['created_users'] . ' รายการ';
         } catch (Exception $exception) {
             $error = $exception->getMessage();
         }

@@ -32,6 +32,9 @@ function studentDisplayName($student)
 
 function renderLinePreviewItem($item)
 {
+    if (isset($item['profile_image_visible']) && (int) $item['profile_image_visible'] === 0) {
+        $item['profile_image'] = '';
+    }
     ?>
     <a href="profile.php?id=<?php echo (int) $item['id']; ?>" class="block rounded-md border border-slate-200 p-4 hover:bg-slate-50">
         <div class="flex items-center gap-3">
@@ -58,7 +61,10 @@ ob_start();
                 <p class="mt-2 text-sm text-slate-600">รุ่น <?php echo h($student['generation']); ?> · <?php echo h($student['faculty']); ?> / <?php echo h($student['major']); ?></p>
             </div>
         </div>
-        <a href="profile.php?id=<?php echo (int) $student['id']; ?>" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">ดูข้อมูลทั้งหมด</a>
+        <div class="flex gap-2">
+            <a href="tree.php" class="rounded-md border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 hover:bg-teal-50">ดูแบบกิ่งไม้</a>
+            <a href="profile.php?id=<?php echo (int) $student['id']; ?>" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">ดูข้อมูลทั้งหมด</a>
+        </div>
     </div>
 
     <dl class="mt-6 grid gap-4 md:grid-cols-3">

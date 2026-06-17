@@ -65,6 +65,11 @@ ob_start();
         <?php endif; ?>
 
         <?php foreach ($items as $item): ?>
+            <?php
+            if (isset($item['profile_image_visible']) && (int) $item['profile_image_visible'] === 0) {
+                $item['profile_image'] = '';
+            }
+            ?>
             <a href="profile.php?id=<?php echo (int) $item['id']; ?>" class="block rounded-md border border-slate-200 p-4 hover:bg-slate-50">
                 <div class="flex items-center gap-3">
                     <?php echo renderStudentAvatar($item, 'h-11 w-11'); ?>
