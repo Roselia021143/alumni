@@ -86,6 +86,21 @@ function checkedField($student, $field)
     return !empty($student[$field]) ? 'checked' : '';
 }
 
+function formatPhoneForInput($phone)
+{
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+
+    if (strlen($digits) <= 3) {
+        return $digits;
+    }
+
+    if (strlen($digits) <= 6) {
+        return substr($digits, 0, 3) . '-' . substr($digits, 3);
+    }
+
+    return substr($digits, 0, 3) . '-' . substr($digits, 3, 3) . '-' . substr($digits, 6, 4);
+}
+
 $facultyOptions = [
     'วิทยาศาสตร์และเทคโนโลยี',
 ];
@@ -131,7 +146,8 @@ ob_start();
                 <option value="<?php echo h($major); ?>" <?php echo (isset($student['major']) && $student['major'] === $major) ? 'selected' : ''; ?>><?php echo h($major); ?></option>
             <?php endforeach; ?>
         </select>
-        <input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" value="<?php echo h($student['phone']); ?>" placeholder="เบอร์โทร" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" value="<?php echo h(formatPhoneForInput($student['phone'])); ?>" placeholder="099-999-9999" title="กรุณากรอกเบอร์โทร 10 หลัก เช่น 099-999-9999" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input type="email" value="<?php echo h(isset($student['email']) ? $student['email'] : ''); ?>" placeholder="Email" readonly class="rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500" title="Email ที่ใช้สมัครสมาชิก">
         <input name="facebook" value="<?php echo h($student['facebook']); ?>" placeholder="Facebook" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input name="instagram" value="<?php echo h($student['instagram']); ?>" placeholder="Instagram" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input name="line_id_contact" value="<?php echo h($student['line_id_contact']); ?>" placeholder="Line ID" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
@@ -151,6 +167,7 @@ ob_start();
                 'student_code_visible' => 'เปิดเผยรหัสนักศึกษา',
                 'generation_visible' => 'เปิดเผยปีการศึกษา',
                 'phone_visible' => 'เปิดเผยเบอร์โทร',
+                'email_visible' => 'เปิดเผย Email',
                 'facebook_visible' => 'เปิดเผย Facebook',
                 'instagram_visible' => 'เปิดเผย Instagram',
                 'line_id_contact_visible' => 'เปิดเผย Line ID',
@@ -174,6 +191,30 @@ ob_start();
         <button type="submit" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">บันทึก</button>
     </div>
 </form>
+<script>
+(function () {
+    var phoneInput = document.getElementById('phone');
+
+    if (!phoneInput) {
+        return;
+    }
+
+    phoneInput.addEventListener('input', function () {
+        var digits = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+        var formatted = digits.slice(0, 3);
+
+        if (digits.length > 3) {
+            formatted += '-' + digits.slice(3, 6);
+        }
+
+        if (digits.length > 6) {
+            formatted += '-' + digits.slice(6, 10);
+        }
+
+        phoneInput.value = formatted;
+    });
+})();
+</script>
 <?php
 $content = ob_get_clean();
 

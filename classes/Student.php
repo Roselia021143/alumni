@@ -7,6 +7,7 @@ class Student
     private $conn;
     private $studentUser;
     private $hasProfileImageColumn;
+    private $hasEmailVisibleColumn;
 
     public function __construct(mysqli $conn)
     {
@@ -100,7 +101,13 @@ class Student
 
     public function find($id)
     {
-        $stmt = $this->conn->prepare('SELECT * FROM students WHERE id = ? LIMIT 1');
+        $stmt = $this->conn->prepare(
+            'SELECT s.*, su.email
+             FROM students s
+             LEFT JOIN student_users su ON su.student_id = s.id
+             WHERE s.id = ?
+             LIMIT 1'
+        );
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $student = $stmt->get_result()->fetch_assoc();
@@ -111,7 +118,13 @@ class Student
 
     public function findByCode($studentCode)
     {
-        $stmt = $this->conn->prepare('SELECT * FROM students WHERE student_code = ? LIMIT 1');
+        $stmt = $this->conn->prepare(
+            'SELECT s.*, su.email
+             FROM students s
+             LEFT JOIN student_users su ON su.student_id = s.id
+             WHERE s.student_code = ?
+             LIMIT 1'
+        );
         $stmt->bind_param('s', $studentCode);
         $stmt->execute();
         $student = $stmt->get_result()->fetch_assoc();
@@ -272,6 +285,13 @@ class Student
         );
         $stmt->execute();
         $stmt->close();
+
+        if ($this->hasEmailVisibleColumn()) {
+            $stmt = $this->conn->prepare('UPDATE students SET email_visible = ? WHERE id = ?');
+            $stmt->bind_param('ii', $data['email_visible'], $id);
+            $stmt->execute();
+            $stmt->close();
+        }
     }
 
     public function admissionYearFromCode($studentCode)
@@ -363,6 +383,59 @@ class Student
         $stmt->close();
 
         $this->recordLineRequest($studentId, $childStudentCode, 'child');
+    }
+
+    public function adminSetParentByCode($studentId, $parentStudentCode)
+    {
+        $student = $this->find($studentId);
+        $parentStudentCode = trim((string) $parentStudentCode);
+
+        if (!$student) {
+            throw new RuntimeException('ไม่พบข้อมูลนักศึกษา');
+        }
+
+        if ($parentStudentCode === '') {
+            $this->unlinkParent($studentId);
+            return;
+        }
+
+        $parent = $this->findByCode($parentStudentCode);
+
+        if (!$parent) {
+            throw new RuntimeException('ไม่พบรหัสนักศึกษาของพี่รหัสในระบบ');
+        }
+
+        if ((int) $student['id'] === (int) $parent['id']) {
+            throw new RuntimeException('ไม่สามารถกำหนดนักศึกษาเป็นพี่รหัสของตัวเองได้');
+        }
+
+        $this->assertDifferentGeneration($student['student_code'], $parent['student_code']);
+
+        foreach ($this->getDescendants((int) $student['id']) as $descendant) {
+            if ((int) $descendant['id'] === (int) $parent['id']) {
+                throw new RuntimeException('ไม่สามารถผูกสายย้อนกลับได้ เนื่องจากจะทำให้เกิดวงจรในสายรหัส');
+            }
+        }
+
+        $parentId = (int) $parent['id'];
+        $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = ? WHERE id = ?');
+        $stmt->bind_param('ii', $parentId, $studentId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    public function unlinkParent($studentId)
+    {
+        $studentId = (int) $studentId;
+
+        if ($studentId <= 0 || !$this->find($studentId)) {
+            throw new RuntimeException('ไม่พบข้อมูลนักศึกษา');
+        }
+
+        $stmt = $this->conn->prepare('UPDATE students SET parent_student_id = NULL WHERE id = ?');
+        $stmt->bind_param('i', $studentId);
+        $stmt->execute();
+        $stmt->close();
     }
 
     public function getTree($id, $upDepth = null, $downDepth = null)
@@ -626,6 +699,7 @@ class Student
             'student_code_visible' => isset($data['student_code_visible']) ? 1 : 0,
             'generation_visible' => isset($data['generation_visible']) ? 1 : 0,
             'phone_visible' => isset($data['phone_visible']) ? 1 : 0,
+            'email_visible' => isset($data['email_visible']) ? 1 : 0,
             'facebook_visible' => isset($data['facebook_visible']) ? 1 : 0,
             'instagram_visible' => isset($data['instagram_visible']) ? 1 : 0,
             'line_id_contact_visible' => isset($data['line_id_contact_visible']) ? 1 : 0,
@@ -661,9 +735,10 @@ class Student
     private function findWithParent($id)
     {
         $stmt = $this->conn->prepare(
-            'SELECT s.*, p.student_code AS parent_student_code,
+            'SELECT s.*, su.email, p.student_code AS parent_student_code,
                     p.first_name AS parent_first_name, p.last_name AS parent_last_name
              FROM students s
+             LEFT JOIN student_users su ON su.student_id = s.id
              LEFT JOIN students p ON s.parent_student_id = p.id
              WHERE s.id = ?
              LIMIT 1'
@@ -726,8 +801,9 @@ class Student
     private function getChildren($parentStudentId)
     {
         $stmt = $this->conn->prepare(
-            'SELECT s.*, p.student_code AS parent_student_code
+            'SELECT s.*, su.email, p.student_code AS parent_student_code
              FROM students s
+             LEFT JOIN student_users su ON su.student_id = s.id
              LEFT JOIN students p ON s.parent_student_id = p.id
              WHERE s.parent_student_id = ?
              ORDER BY s.generation ASC, s.student_code ASC'
@@ -827,5 +903,17 @@ class Student
         $this->hasProfileImageColumn = $result && $result->num_rows > 0;
 
         return $this->hasProfileImageColumn;
+    }
+
+    private function hasEmailVisibleColumn()
+    {
+        if ($this->hasEmailVisibleColumn !== null) {
+            return $this->hasEmailVisibleColumn;
+        }
+
+        $result = $this->conn->query("SHOW COLUMNS FROM students LIKE 'email_visible'");
+        $this->hasEmailVisibleColumn = $result && $result->num_rows > 0;
+
+        return $this->hasEmailVisibleColumn;
     }
 }

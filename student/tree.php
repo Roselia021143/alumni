@@ -72,7 +72,7 @@ function treeVisibleValue($student, $field, $label, $alwaysVisible = false)
     $value = isset($student[$field]) ? trim((string) $student[$field]) : '';
     $visibleField = $field . '_visible';
 
-    if (!$alwaysVisible && isset($student[$visibleField]) && (int) $student[$visibleField] === 0) {
+    if (!$alwaysVisible && (!array_key_exists($visibleField, $student) || (int) $student[$visibleField] === 0)) {
         $value = 'ไม่เปิดเผย';
     } elseif ($value === '') {
         $value = 'ยังไม่ระบุ';
@@ -95,6 +95,7 @@ function renderTreeCard($student, $label, $variant = '')
         treeVisibleValue($student, 'faculty', 'คณะ', true),
         treeVisibleValue($student, 'major', 'สาขา', true),
         treeVisibleValue($student, 'phone', 'เบอร์โทร'),
+        treeVisibleValue($student, 'email', 'Email'),
         treeVisibleValue($student, 'facebook', 'Facebook'),
         treeVisibleValue($student, 'instagram', 'Instagram'),
         treeVisibleValue($student, 'line_id_contact', 'Line ID'),

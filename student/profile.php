@@ -22,6 +22,18 @@ if (!$student) {
 }
 
 $isOwner = (int) $ownerStudentId === (int) $targetStudentId;
+
+function profilePhoneFormat($phone)
+{
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+
+    if (strlen($digits) === 10) {
+        return substr($digits, 0, 3) . '-' . substr($digits, 3, 3) . '-' . substr($digits, 6, 4);
+    }
+
+    return $digits;
+}
+
 $fields = [
     ['รหัสนักศึกษา', 'student_code', 'student_code_visible'],
     ['ชื่อ', 'first_name', null],
@@ -31,6 +43,7 @@ $fields = [
     ['คณะ', 'faculty', null],
     ['สาขา', 'major', null],
     ['เบอร์โทร', 'phone', 'phone_visible'],
+    ['Email', 'email', 'email_visible'],
     ['Facebook', 'facebook', 'facebook_visible'],
     ['Instagram', 'instagram', 'instagram_visible'],
     ['Line ID', 'line_id_contact', 'line_id_contact_visible'],
@@ -64,10 +77,20 @@ ob_start();
             if (!$isOwner && $visibleField !== null && empty($student[$visibleField])) {
                 continue;
             }
+
+            $value = isset($student[$field]) ? $student[$field] : '';
+
+            if ($field === 'phone') {
+                $value = profilePhoneFormat($value);
+            }
+
+            if (trim((string) $value) === '') {
+                $value = 'ยังไม่ระบุ';
+            }
             ?>
             <div class="rounded-md bg-slate-50 p-4">
                 <dt class="text-xs font-semibold text-slate-500"><?php echo h($label); ?></dt>
-                <dd class="mt-1 font-medium"><?php echo h($student[$field]); ?></dd>
+                <dd class="mt-1 font-medium"><?php echo h($value); ?></dd>
             </div>
         <?php endforeach; ?>
     </dl>

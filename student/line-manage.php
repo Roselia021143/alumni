@@ -88,7 +88,7 @@ ob_start();
         ปีการศึกษาปัจจุบัน <?php echo h($currentAcademicYear); ?>, คำนวณเป็นปี <?php echo h($yearLevel); ?>
     </p>
 
-    <form method="post" class="mt-6 grid gap-5 md:grid-cols-2">
+    <form id="lineManageForm" method="post" class="mt-6 grid gap-5 md:grid-cols-2">
         <div>
             <label for="parent_student_code" class="mb-2 block text-sm font-medium">รหัสนักศึกษาของพี่รหัส</label>
             <input
@@ -144,6 +144,134 @@ ob_start();
         </div>
     </div>
 </section>
+
+<div id="lineConfirmModal" class="line-confirm-modal" hidden>
+    <div class="line-confirm-backdrop" data-modal-close></div>
+    <section class="line-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="lineConfirmTitle">
+        <div class="line-confirm-icon" aria-hidden="true">?</div>
+        <p class="text-sm font-semibold text-teal-700">ตรวจสอบข้อมูลก่อนบันทึก</p>
+        <h3 id="lineConfirmTitle" class="mt-2 text-xl font-bold">ยืนยันการผูกสายรหัส</h3>
+        <p id="lineConfirmRelation" class="mt-2 text-sm text-slate-600"></p>
+
+        <dl class="line-confirm-student mt-5">
+            <div>
+                <dt>รหัสนักศึกษา</dt>
+                <dd id="lineConfirmCode">-</dd>
+            </div>
+            <div>
+                <dt>ชื่อ-นามสกุล</dt>
+                <dd id="lineConfirmName">-</dd>
+            </div>
+            <div>
+                <dt>ปีการศึกษา</dt>
+                <dd id="lineConfirmGeneration">-</dd>
+            </div>
+        </dl>
+
+        <p id="lineConfirmError" class="line-confirm-error" hidden></p>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50" data-modal-close>กลับไปตรวจสอบ</button>
+            <button id="lineConfirmSubmit" type="button" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">ยืนยันและบันทึก</button>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    var form = document.getElementById('lineManageForm');
+    var modal = document.getElementById('lineConfirmModal');
+    var confirmButton = document.getElementById('lineConfirmSubmit');
+    var parentInput = document.getElementById('parent_student_code');
+    var childInput = document.getElementById('child_student_code');
+    var submitting = false;
+
+    if (!form || !modal || !confirmButton) {
+        return;
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove('modal-open');
+    }
+
+    function showError(message) {
+        var error = document.getElementById('lineConfirmError');
+        error.textContent = message;
+        error.hidden = false;
+        confirmButton.hidden = true;
+    }
+
+    form.addEventListener('submit', function (event) {
+        if (submitting) {
+            return;
+        }
+
+        event.preventDefault();
+        var parentCode = parentInput && !parentInput.disabled ? parentInput.value.trim() : '';
+        var childCode = childInput && !childInput.disabled ? childInput.value.trim() : '';
+
+        if ((parentCode && childCode) || (!parentCode && !childCode)) {
+            window.alert(parentCode && childCode ? 'กรุณาบันทึกพี่รหัสหรือน้องรหัสทีละรายการ' : 'กรุณากรอกรหัสนักศึกษาก่อนบันทึก');
+            return;
+        }
+
+        var code = parentCode || childCode;
+        var relation = parentCode ? 'พี่รหัส' : 'น้องรหัส';
+        var error = document.getElementById('lineConfirmError');
+
+        error.hidden = true;
+        confirmButton.hidden = true;
+        document.getElementById('lineConfirmRelation').textContent = 'คุณกำลังเพิ่มบุคคลนี้เป็น' + relation + ' กรุณาตรวจสอบว่าเป็นคนที่ถูกต้อง';
+        document.getElementById('lineConfirmCode').textContent = code;
+        document.getElementById('lineConfirmName').textContent = 'กำลังค้นหาข้อมูล...';
+        document.getElementById('lineConfirmGeneration').textContent = '-';
+        modal.hidden = false;
+        document.body.classList.add('modal-open');
+
+        fetch('student-lookup.php?code=' + encodeURIComponent(code), {
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('ไม่สามารถตรวจสอบข้อมูลได้');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data.success) {
+                    showError(data.message || 'ไม่พบข้อมูลนักศึกษา');
+                    return;
+                }
+
+                document.getElementById('lineConfirmCode').textContent = data.student.student_code;
+                document.getElementById('lineConfirmName').textContent = data.student.name;
+                document.getElementById('lineConfirmGeneration').textContent = data.student.generation || 'ยังไม่ระบุ';
+                confirmButton.hidden = false;
+            })
+            .catch(function () {
+                showError('ไม่สามารถตรวจสอบข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+            });
+    });
+
+    confirmButton.addEventListener('click', function () {
+        submitting = true;
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'กำลังบันทึก...';
+        form.submit();
+    });
+
+    modal.querySelectorAll('[data-modal-close]').forEach(function (button) {
+        button.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+})();
+</script>
 <?php
 $content = ob_get_clean();
 

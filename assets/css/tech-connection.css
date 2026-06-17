@@ -840,6 +840,35 @@ body.student-tech-page::before {
     color: var(--tc-green) !important;
 }
 
+.student-tech-page .tree-board-hero p,
+.student-tech-page .tree-board-section-head span,
+.student-tech-page .tree-board-generation-head span {
+    color: var(--tc-green) !important;
+}
+
+.student-tech-page .tree-board-stats strong {
+    color: var(--tc-yellow) !important;
+}
+
+.student-tech-page .tree-board-actions a {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--tc-muted) !important;
+}
+
+.student-tech-page .tree-board-actions a:hover,
+.student-tech-page .tree-board-actions a.active {
+    border-color: rgba(66, 245, 155, 0.52) !important;
+    background: rgba(66, 245, 155, 0.14) !important;
+    color: var(--tc-green) !important;
+}
+
+.student-tech-page .tree-board-card h3,
+.student-tech-page .tree-board-card p,
+.student-tech-page .tree-board-generation-head strong {
+    color: var(--tc-text) !important;
+}
+
 .student-tech-page .tree-board-card-self {
     border-color: transparent !important;
     background: transparent !important;
@@ -1043,4 +1072,258 @@ body.student-tech-page::before {
 .privacy-toggle input:focus-visible + .privacy-toggle-track {
     outline: 3px solid rgba(255, 216, 87, 0.35);
     outline-offset: 3px;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.line-confirm-modal[hidden] {
+    display: none;
+}
+
+.line-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+}
+
+.line-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(1, 5, 13, 0.76);
+    backdrop-filter: blur(10px);
+}
+
+.line-confirm-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 520px);
+    max-height: calc(100vh - 36px);
+    overflow-y: auto;
+    border: 1px solid rgba(66, 245, 155, 0.3);
+    border-radius: 24px;
+    background: linear-gradient(145deg, rgba(14, 32, 56, 0.98), rgba(5, 11, 24, 0.98));
+    color: var(--tc-text);
+    padding: 24px;
+    box-shadow: 0 0 60px rgba(66, 245, 155, 0.16), 0 30px 90px rgba(0, 0, 0, 0.48);
+    animation: modalEnter 0.22s ease-out;
+}
+
+.line-confirm-icon {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    place-items: center;
+    border: 1px solid rgba(255, 216, 87, 0.45);
+    border-radius: 16px;
+    background: rgba(255, 216, 87, 0.12);
+    color: var(--tc-yellow);
+    font-size: 24px;
+    font-weight: 800;
+    box-shadow: 0 0 24px rgba(255, 216, 87, 0.12);
+}
+
+.line-confirm-student {
+    display: grid;
+    gap: 10px;
+}
+
+.line-confirm-student div {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.055);
+    padding: 12px;
+}
+
+.line-confirm-student dt {
+    color: var(--tc-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.line-confirm-student dd {
+    overflow-wrap: anywhere;
+    color: var(--tc-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.line-confirm-error {
+    margin-top: 14px;
+    border: 1px solid rgba(255, 107, 138, 0.3);
+    border-radius: 14px;
+    background: rgba(255, 107, 138, 0.1);
+    color: #ffb5c5;
+    padding: 12px;
+    font-size: 13px;
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 560px) {
+    .line-confirm-dialog {
+        border-radius: 20px;
+        padding: 20px;
+    }
+
+    .line-confirm-student div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
+
+.admin-line-card-scroll {
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(66, 245, 155, 0.55) rgba(255, 255, 255, 0.08);
+}
+
+.admin-line-card-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-line-card-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-line-card-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--tc-green), var(--tc-yellow));
+}
+
+.admin-line-card {
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.055);
+    padding: 14px;
+    transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-line-card:hover {
+    border-color: rgba(66, 245, 155, 0.34);
+    background: rgba(66, 245, 155, 0.07);
+    box-shadow: 0 0 28px rgba(66, 245, 155, 0.08);
+}
+
+.admin-line-card-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-line-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    padding-top: 12px;
+}
+
+.admin-line-editor {
+    flex: 1 1 220px;
+}
+
+.admin-line-editor summary,
+.admin-line-delete-button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    border: 1px solid rgba(255, 216, 87, 0.28);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--tc-yellow);
+    padding: 0 11px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+
+.admin-line-editor summary::-webkit-details-marker {
+    display: none;
+}
+
+.admin-line-editor[open] summary {
+    border-color: rgba(66, 245, 155, 0.42);
+    color: var(--tc-green);
+}
+
+.admin-line-delete-button {
+    border-color: rgba(255, 107, 138, 0.3);
+    color: #ff9bb0;
+}
+
+.admin-line-delete-button:hover {
+    border-color: rgba(255, 107, 138, 0.58);
+    background: rgba(255, 107, 138, 0.1);
+}
+
+.admin-line-inline-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    background: rgba(2, 8, 20, 0.4);
+    padding: 12px;
+}
+
+.admin-line-inline-form label {
+    display: grid;
+    gap: 6px;
+}
+
+.admin-line-inline-form label span,
+.admin-line-quick-form > label {
+    color: var(--tc-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.admin-line-quick-form {
+    display: grid;
+    gap: 6px;
+}
+
+.admin-line-quick-form > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+    .admin-line-card-scroll {
+        max-height: 430px;
+    }
+
+    .admin-line-quick-form > div {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-line-card-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
 }
