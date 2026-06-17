@@ -603,6 +603,8 @@ class Student
 
     private function normalize($data)
     {
+        $phone = isset($data['phone']) ? preg_replace('/\D+/', '', trim((string) $data['phone'])) : '';
+
         return [
             'student_code' => isset($data['student_code']) ? trim($data['student_code']) : '',
             'first_name' => isset($data['first_name']) ? trim($data['first_name']) : '',
@@ -611,7 +613,7 @@ class Student
             'generation' => isset($data['generation']) ? (int) $data['generation'] : 0,
             'faculty' => isset($data['faculty']) ? trim($data['faculty']) : '',
             'major' => isset($data['major']) ? trim($data['major']) : '',
-            'phone' => isset($data['phone']) ? trim($data['phone']) : '',
+            'phone' => $phone,
             'facebook' => isset($data['facebook']) ? trim($data['facebook']) : '',
             'instagram' => isset($data['instagram']) ? trim($data['instagram']) : '',
             'line_id_contact' => isset($data['line_id_contact']) ? trim($data['line_id_contact']) : '',

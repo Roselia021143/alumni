@@ -131,7 +131,7 @@ ob_start();
                 <option value="<?php echo h($major); ?>" <?php echo (isset($student['major']) && $student['major'] === $major) ? 'selected' : ''; ?>><?php echo h($major); ?></option>
             <?php endforeach; ?>
         </select>
-        <input name="phone" value="<?php echo h($student['phone']); ?>" placeholder="เบอร์โทร" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
+        <input name="phone" type="tel" inputmode="numeric" pattern="[0-9]*" value="<?php echo h($student['phone']); ?>" placeholder="เบอร์โทร" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input name="facebook" value="<?php echo h($student['facebook']); ?>" placeholder="Facebook" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input name="instagram" value="<?php echo h($student['instagram']); ?>" placeholder="Instagram" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input name="line_id_contact" value="<?php echo h($student['line_id_contact']); ?>" placeholder="Line ID" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
@@ -158,9 +158,12 @@ ob_start();
             ];
             ?>
             <?php foreach ($privacyFields as $field => $label): ?>
-                <label class="flex items-center gap-2 text-sm">
+                <label class="privacy-toggle">
                     <input type="checkbox" name="<?php echo h($field); ?>" value="1" <?php echo checkedField($student, $field); ?>>
-                    <span><?php echo h($label); ?></span>
+                    <span class="privacy-toggle-track" aria-hidden="true">
+                        <span class="privacy-toggle-thumb"></span>
+                    </span>
+                    <span class="privacy-toggle-label"><?php echo h($label); ?></span>
                 </label>
             <?php endforeach; ?>
         </div>

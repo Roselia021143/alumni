@@ -970,3 +970,77 @@ body.student-tech-page::before {
 .admin-tech-page .admin-line-details-scroll::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, var(--tc-green), var(--tc-yellow));
 }
+
+.privacy-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.055);
+    padding: 10px 12px;
+    color: var(--tc-muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.privacy-toggle:hover {
+    border-color: rgba(66, 245, 155, 0.34);
+    background: rgba(66, 245, 155, 0.08);
+    color: var(--tc-text);
+}
+
+.privacy-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.privacy-toggle-track {
+    position: relative;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(2, 8, 20, 0.74);
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.privacy-toggle-thumb {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--tc-muted);
+    transform: translateY(-50%);
+    transition: transform 0.2s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.privacy-toggle input:checked + .privacy-toggle-track {
+    border-color: rgba(66, 245, 155, 0.58);
+    background: linear-gradient(135deg, rgba(66, 245, 155, 0.24), rgba(255, 216, 87, 0.18));
+    box-shadow: 0 0 24px rgba(66, 245, 155, 0.16), inset 0 0 18px rgba(66, 245, 155, 0.12);
+}
+
+.privacy-toggle input:checked + .privacy-toggle-track .privacy-toggle-thumb {
+    background: linear-gradient(135deg, var(--tc-green), var(--tc-yellow));
+    box-shadow: 0 0 18px rgba(66, 245, 155, 0.44);
+    transform: translate(20px, -50%);
+}
+
+.privacy-toggle input:checked ~ .privacy-toggle-label {
+    color: var(--tc-text);
+}
+
+.privacy-toggle input:focus-visible + .privacy-toggle-track {
+    outline: 3px solid rgba(255, 216, 87, 0.35);
+    outline-offset: 3px;
+}
