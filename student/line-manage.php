@@ -121,7 +121,7 @@ ob_start();
             <p class="text-xs font-semibold text-teal-700">พี่รหัสปัจจุบัน</p>
             <?php if ($currentParent): ?>
                 <p class="mt-2 font-semibold"><?php echo h($currentParent['student_code']); ?> - <?php echo h(lineManageName($currentParent)); ?></p>
-                <p class="mt-1 text-sm text-slate-600">ข้อมูลนี้ถูก sync จากค่า parent_student_id ของคุณ</p>
+                <p class="mt-1 text-sm text-slate-600">ข้อมูลนี้ถูก sync จากค่า พี่รหัสของคุณ</p>
             <?php else: ?>
                 <p class="mt-2 text-sm text-slate-500">ยังไม่ได้ผูกพี่รหัส</p>
             <?php endif; ?>

@@ -117,4 +117,4 @@ ob_start();
 <?php
 $content = ob_get_clean();
 
-renderStudentLayout('หน้าแรกนักศึกษา', $content);
+renderStudentLayout('หน้าแรก', $content);

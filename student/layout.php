@@ -28,7 +28,7 @@ function renderStudentLayout($title, $content)
         <header class="border-b border-slate-200 bg-white">
             <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
                 <div>
-                    <p class="text-sm font-medium text-teal-700">Student Portal</p>
+                    
                     <h1 class="text-xl font-bold"><?php echo h($title); ?></h1>
                 </div>
                 <nav class="flex flex-wrap items-center gap-2">

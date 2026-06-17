@@ -37,8 +37,8 @@ $techJsVersion = filemtime(__DIR__ . '/assets/js/tech-connection.js');
     <main class="mx-auto flex min-h-screen max-w-5xl items-center px-4 py-10">
         <section class="w-full">
             <div class="mb-8 text-center">
-                <p class="text-sm font-semibold text-teal-700">CIT Alumni</p>
-                <h1 class="mt-2 text-3xl font-bold">Alumni Code Line</h1>
+                <p class="text-sm font-semibold text-teal-700">CIT สายรหัส</p>
+                <h1 class="mt-2 text-3xl font-bold">CIT Code Line</h1>
                 <p class="mt-2 text-sm text-slate-600">เลือกประเภทการเข้าสู่ระบบ</p>
             </div>
 
