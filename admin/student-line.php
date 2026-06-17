@@ -63,7 +63,6 @@ function adminLineStudentName($student)
 function renderAdminLineCard($student, $label, $returnStudentId)
 {
     $hasParent = !empty($student['parent_student_id']);
-    $currentParentCode = isset($student['parent_student_code']) ? $student['parent_student_code'] : '';
     ?>
     <article class="admin-line-card">
         <div class="admin-line-card-main">
@@ -76,21 +75,8 @@ function renderAdminLineCard($student, $label, $returnStudentId)
         </div>
 
         <div class="admin-line-card-actions">
-            <details class="admin-line-editor">
-                <summary>แก้ไขสาย</summary>
-                <form method="post" action="student-line.php?id=<?php echo (int) $returnStudentId; ?>" class="admin-line-action-form admin-line-inline-form" data-action-label="เปลี่ยนพี่รหัสของนักศึกษา">
-                    <input type="hidden" name="action" value="set_parent">
-                    <input type="hidden" name="target_student_id" value="<?php echo (int) $student['id']; ?>">
-                    <label>
-                        <span>รหัสนักศึกษาของพี่รหัส</span>
-                        <input name="parent_student_code" value="<?php echo h($currentParentCode); ?>" placeholder="เว้นว่างเพื่อถอดออกจากสาย" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-                    </label>
-                    <button type="submit" class="rounded-md bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-800">บันทึกการแก้ไข</button>
-                </form>
-            </details>
-
             <?php if ($hasParent): ?>
-                <form method="post" action="student-line.php?id=<?php echo (int) $returnStudentId; ?>" class="admin-line-action-form" data-action-label="ถอดนักศึกษาออกจากสาย">
+                <form method="post" action="student-line.php?id=<?php echo (int) $returnStudentId; ?>" class="admin-line-action-form admin-line-unlink-form" data-student-label="<?php echo h($student['student_code'] . ' - ' . adminLineStudentName($student)); ?>">
                     <input type="hidden" name="action" value="unlink">
                     <input type="hidden" name="target_student_id" value="<?php echo (int) $student['id']; ?>">
                     <button type="submit" class="admin-line-delete-button">ถอดออกจากสาย</button>
@@ -129,7 +115,7 @@ ob_start();
         </div>
 
         <div class="grid w-full gap-3 lg:max-w-md">
-            <form method="post" action="student-line.php?id=<?php echo (int) $id; ?>" class="admin-line-action-form admin-line-quick-form" data-action-label="เพิ่มหรือเปลี่ยนพี่รหัส">
+            <form method="post" action="student-line.php?id=<?php echo (int) $id; ?>" class="admin-line-action-form admin-line-link-form admin-line-quick-form" data-relation="พี่รหัส">
                 <input type="hidden" name="action" value="set_parent">
                 <input type="hidden" name="target_student_id" value="<?php echo (int) $student['id']; ?>">
                 <label for="admin_parent_code">เพิ่มหรือเปลี่ยนพี่รหัส</label>
@@ -139,7 +125,7 @@ ob_start();
                 </div>
             </form>
 
-            <form method="post" action="student-line.php?id=<?php echo (int) $id; ?>" class="admin-line-action-form admin-line-quick-form" data-action-label="เพิ่มนักศึกษาเป็นน้องรหัส">
+            <form method="post" action="student-line.php?id=<?php echo (int) $id; ?>" class="admin-line-action-form admin-line-link-form admin-line-quick-form" data-relation="น้องรหัส">
                 <input type="hidden" name="action" value="add_child">
                 <label for="admin_child_code">เพิ่มน้องรหัสเข้ามาในสาย</label>
                 <div>
@@ -188,6 +174,194 @@ ob_start();
 <div class="mt-6">
     <a href="students.php" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">กลับหน้ารายการ</a>
 </div>
+
+<div id="adminLinkModal" class="line-confirm-modal" hidden>
+    <div class="line-confirm-backdrop" data-link-modal-close></div>
+    <section class="line-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminLinkTitle">
+        <div class="line-confirm-icon" aria-hidden="true">?</div>
+        <p class="text-sm font-semibold text-teal-300">ตรวจสอบข้อมูลก่อนบันทึก</p>
+        <h3 id="adminLinkTitle" class="mt-2 text-xl font-bold">ยืนยันการเพิ่มสายรหัส?</h3>
+        <p id="adminLinkRelation" class="mt-2 text-sm text-slate-300"></p>
+
+        <dl class="line-confirm-student mt-5">
+            <div>
+                <dt>รหัสนักศึกษา</dt>
+                <dd id="adminLinkCode">-</dd>
+            </div>
+            <div>
+                <dt>ชื่อ-นามสกุล</dt>
+                <dd id="adminLinkName">-</dd>
+            </div>
+            <div>
+                <dt>รุ่น</dt>
+                <dd id="adminLinkGeneration">-</dd>
+            </div>
+        </dl>
+
+        <p id="adminLinkError" class="line-confirm-error" hidden></p>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" class="rounded-md border border-slate-500 px-4 py-2 text-sm font-medium hover:bg-white/5" data-link-modal-close>ยกเลิก</button>
+            <button id="adminLinkConfirm" type="button" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800" hidden>ยืนยันและบันทึก</button>
+        </div>
+    </section>
+</div>
+
+<div id="adminUnlinkModal" class="line-confirm-modal" hidden>
+    <div class="line-confirm-backdrop" data-unlink-modal-close></div>
+    <section class="line-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="adminUnlinkTitle">
+        <div class="line-confirm-icon" aria-hidden="true">!</div>
+        <p class="text-sm font-semibold text-red-300">ตรวจสอบก่อนถอดสายรหัส</p>
+        <h3 id="adminUnlinkTitle" class="mt-2 text-xl font-bold">ยืนยันการถอดออกจากสายรหัส?</h3>
+        <p class="mt-3 text-sm text-slate-300">นักศึกษารายนี้จะถูกยกเลิกความสัมพันธ์กับพี่รหัสเดิม</p>
+        <p id="adminUnlinkStudent" class="mt-5 rounded-lg border border-white/10 bg-white/5 px-4 py-3 font-semibold"></p>
+
+        <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" class="rounded-md border border-slate-500 px-4 py-2 text-sm font-medium hover:bg-white/5" data-unlink-modal-close>ยกเลิก</button>
+            <button id="adminUnlinkConfirm" type="button" class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">ยืนยันการถอดสาย</button>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    var modal = document.getElementById('adminLinkModal');
+    var confirmButton = document.getElementById('adminLinkConfirm');
+    var error = document.getElementById('adminLinkError');
+    var pendingForm = null;
+
+    if (!modal || !confirmButton || !error) {
+        return;
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove('modal-open');
+        pendingForm = null;
+    }
+
+    document.querySelectorAll('.admin-line-link-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            var action = form.querySelector('input[name="action"]');
+            var codeInput = action && action.value === 'add_child'
+                ? form.querySelector('input[name="child_student_code"]')
+                : form.querySelector('input[name="parent_student_code"]');
+            var code = codeInput ? codeInput.value.trim() : '';
+
+            if (!code) {
+                return;
+            }
+
+            event.preventDefault();
+            pendingForm = form;
+            confirmButton.hidden = true;
+            confirmButton.disabled = false;
+            confirmButton.textContent = 'ยืนยันและบันทึก';
+            error.hidden = true;
+            document.getElementById('adminLinkRelation').textContent = 'กำลังเพิ่มบุคคลนี้เป็น' + (form.getAttribute('data-relation') || 'สายรหัส');
+            document.getElementById('adminLinkCode').textContent = code;
+            document.getElementById('adminLinkName').textContent = 'กำลังค้นหาข้อมูล...';
+            document.getElementById('adminLinkGeneration').textContent = '-';
+            modal.hidden = false;
+            document.body.classList.add('modal-open');
+
+            fetch('student-lookup.php?code=' + encodeURIComponent(code), {
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error();
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'ไม่พบข้อมูลนักศึกษา');
+                    }
+
+                    document.getElementById('adminLinkCode').textContent = data.student.student_code;
+                    document.getElementById('adminLinkName').textContent = data.student.name;
+                    document.getElementById('adminLinkGeneration').textContent = data.student.generation || 'ยังไม่ระบุ';
+                    confirmButton.hidden = false;
+                    confirmButton.focus();
+                })
+                .catch(function (requestError) {
+                    document.getElementById('adminLinkName').textContent = '-';
+                    error.textContent = requestError.message || 'ไม่สามารถตรวจสอบข้อมูลได้ กรุณาลองใหม่';
+                    error.hidden = false;
+                });
+        });
+    });
+
+    confirmButton.addEventListener('click', function () {
+        if (!pendingForm) {
+            return;
+        }
+
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'กำลังบันทึก...';
+        pendingForm.submit();
+    });
+
+    modal.querySelectorAll('[data-link-modal-close]').forEach(function (button) {
+        button.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+})();
+
+(function () {
+    var modal = document.getElementById('adminUnlinkModal');
+    var confirmButton = document.getElementById('adminUnlinkConfirm');
+    var studentLabel = document.getElementById('adminUnlinkStudent');
+    var pendingForm = null;
+
+    if (!modal || !confirmButton || !studentLabel) {
+        return;
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove('modal-open');
+        pendingForm = null;
+    }
+
+    document.querySelectorAll('.admin-line-unlink-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            pendingForm = form;
+            studentLabel.textContent = form.getAttribute('data-student-label') || '-';
+            modal.hidden = false;
+            document.body.classList.add('modal-open');
+            confirmButton.focus();
+        });
+    });
+
+    confirmButton.addEventListener('click', function () {
+        if (!pendingForm) {
+            return;
+        }
+
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'กำลังถอดสาย...';
+        pendingForm.submit();
+    });
+
+    modal.querySelectorAll('[data-unlink-modal-close]').forEach(function (button) {
+        button.addEventListener('click', closeModal);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.hidden) {
+            closeModal();
+        }
+    });
+})();
+</script>
 <?php
 $content = ob_get_clean();
 
