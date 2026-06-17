@@ -799,8 +799,27 @@ body.student-tech-page::before {
     border-color: rgba(66, 245, 155, 0.34) !important;
 }
 
+.student-tech-page.portal-choice-page main > section.w-full,
+.student-tech-page main > section.tree-board-stats {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.student-tech-page main > section.tree-board-hero {
+    border: 1px solid rgba(66, 245, 155, 0.24) !important;
+    border-radius: 22px !important;
+    background: var(--tc-panel) !important;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28) !important;
+    backdrop-filter: blur(22px);
+    padding: 22px !important;
+}
+
 .student-tech-page .tree-board-shell {
     border-color: rgba(66, 245, 155, 0.34) !important;
+    border-radius: 22px !important;
+    overflow: hidden;
     background:
         linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
@@ -930,4 +949,24 @@ body.student-tech-page::before {
 
 .admin-tech-page .admin-content {
     color: var(--tc-text) !important;
+}
+
+.admin-tech-page .admin-content > section.grid,
+.admin-tech-page .admin-content > section.flex {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.admin-tech-page .admin-line-details-scroll {
+    scrollbar-color: rgba(66, 245, 155, 0.55) rgba(255, 255, 255, 0.08);
+}
+
+.admin-tech-page .admin-line-details-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-tech-page .admin-line-details-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--tc-green), var(--tc-yellow));
 }

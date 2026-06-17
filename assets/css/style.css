@@ -1313,6 +1313,28 @@ code {
     padding: 28px;
 }
 
+.admin-line-details-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(18, 52, 91, 0.45) rgba(18, 52, 91, 0.08);
+}
+
+.admin-line-details-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-line-details-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: rgba(18, 52, 91, 0.08);
+}
+
+.admin-line-details-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(18, 52, 91, 0.45);
+}
+
 @media (max-width: 900px) {
     .admin-shell {
         grid-template-columns: 1fr;

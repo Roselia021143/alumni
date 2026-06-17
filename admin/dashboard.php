@@ -42,7 +42,7 @@ ob_start();
 
     <article class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <h3 class="text-lg font-semibold">รายละเอียดสายรหัส</h3>
-        <div class="mt-4 space-y-3">
+        <div class="admin-line-details-scroll mt-4 space-y-3">
             <?php if (empty($stats['lines'])): ?>
                 <p class="text-sm text-slate-500">ยังไม่มีข้อมูลสายรหัส</p>
             <?php endif; ?>

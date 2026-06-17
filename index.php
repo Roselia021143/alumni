@@ -31,7 +31,7 @@ $techJsVersion = filemtime(__DIR__ . '/assets/js/tech-connection.js');
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tech-connection.css?v=<?php echo htmlspecialchars((string) $techCssVersion, ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body class="student-tech-page min-h-screen bg-slate-100 text-slate-900">
+<body class="student-tech-page portal-choice-page min-h-screen bg-slate-100 text-slate-900">
     <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
     <main class="mx-auto flex min-h-screen max-w-5xl items-center px-4 py-10">
         <section class="w-full">
