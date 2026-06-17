@@ -67,22 +67,67 @@ function protectTreeStudentPhoto($student, $isSelf = false)
     return $student;
 }
 
+function treeVisibleValue($student, $field, $label, $alwaysVisible = false)
+{
+    $value = isset($student[$field]) ? trim((string) $student[$field]) : '';
+    $visibleField = $field . '_visible';
+
+    if (!$alwaysVisible && isset($student[$visibleField]) && (int) $student[$visibleField] === 0) {
+        $value = 'ไม่เปิดเผย';
+    } elseif ($value === '') {
+        $value = 'ยังไม่ระบุ';
+    }
+
+    return [
+        'label' => $label,
+        'value' => $value,
+    ];
+}
+
 function renderTreeCard($student, $label, $variant = '')
 {
     $isSelf = $variant === 'self';
     $student = protectTreeStudentPhoto($student, $isSelf);
     $className = trim('tree-board-card ' . ($isSelf ? 'tree-board-card-self' : ''));
+    $details = [
+        treeVisibleValue($student, 'student_code', 'รหัสนักศึกษา'),
+        treeVisibleValue($student, 'generation', 'ปีการศึกษา'),
+        treeVisibleValue($student, 'faculty', 'คณะ', true),
+        treeVisibleValue($student, 'major', 'สาขา', true),
+        treeVisibleValue($student, 'phone', 'เบอร์โทร'),
+        treeVisibleValue($student, 'facebook', 'Facebook'),
+        treeVisibleValue($student, 'instagram', 'Instagram'),
+        treeVisibleValue($student, 'line_id_contact', 'Line ID'),
+    ];
     ?>
-    <a class="<?php echo h($className); ?>" href="profile.php?id=<?php echo (int) $student['id']; ?>">
-        <div class="tree-board-photo">
-            <?php echo renderStudentAvatar($student, $isSelf ? 'h-20 w-20' : 'h-14 w-14'); ?>
+    <article class="<?php echo h($className); ?>" tabindex="0" aria-label="<?php echo h($label . ' ' . treeStudentName($student)); ?>">
+        <div class="tree-board-card-inner">
+            <div class="tree-board-card-face tree-board-card-front">
+                <div class="tree-board-photo">
+                    <?php echo renderStudentAvatar($student, $isSelf ? 'h-20 w-20' : 'h-14 w-14'); ?>
+                </div>
+                <div class="tree-board-card-content">
+                    <span class="tree-board-badge"><?php echo h($label); ?></span>
+                    <h3><?php echo h(treeStudentName($student)); ?></h3>
+                    <p>ปีการศึกษา <?php echo h($student['generation']); ?></p>
+                </div>
+            </div>
+            <div class="tree-board-card-face tree-board-card-back">
+                <div class="tree-board-card-content">
+                    <span class="tree-board-badge">ข้อมูลที่เปิดเผย</span>
+                    <h3><?php echo h(treeStudentName($student)); ?></h3>
+                    <dl class="tree-board-detail-list">
+                        <?php foreach ($details as $detail): ?>
+                            <div>
+                                <dt><?php echo h($detail['label']); ?></dt>
+                                <dd><?php echo h($detail['value']); ?></dd>
+                            </div>
+                        <?php endforeach; ?>
+                    </dl>
+                </div>
+            </div>
         </div>
-        <div class="tree-board-card-content">
-            <span class="tree-board-badge"><?php echo h($label); ?></span>
-            <h3><?php echo h(treeStudentName($student)); ?></h3>
-            <p>ปีการศึกษา <?php echo h($student['generation']); ?></p>
-        </div>
-    </a>
+    </article>
     <?php
 }
 

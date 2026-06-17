@@ -6,6 +6,8 @@ function renderAdminLayout($title, $activeMenu, $content, $extraHead = '', $extr
 {
     $username = Session::adminUsername();
     $cssVersion = filemtime(__DIR__ . '/../assets/css/style.css');
+    $techCssVersion = filemtime(__DIR__ . '/../assets/css/tech-connection.css');
+    $techJsVersion = filemtime(__DIR__ . '/../assets/js/tech-connection.js');
     $menus = [
         ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => 'dashboard.php'],
         ['key' => 'students', 'label' => 'จัดการนักศึกษา', 'href' => 'students.php'],
@@ -19,10 +21,15 @@ function renderAdminLayout($title, $activeMenu, $content, $extraHead = '', $extr
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><?php echo h($title); ?> | <?php echo APP_NAME; ?></title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="../assets/css/style.css?v=<?php echo h($cssVersion); ?>">
+        <link rel="stylesheet" href="../assets/css/tech-connection.css?v=<?php echo h($techCssVersion); ?>">
         <?php echo $extraHead; ?>
     </head>
-    <body class="min-h-screen bg-slate-100 text-slate-900">
+    <body class="student-tech-page admin-tech-page min-h-screen bg-slate-100 text-slate-900">
+        <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
         <div class="admin-shell">
             <aside class="admin-sidebar">
                 <div class="admin-brand">
@@ -60,6 +67,7 @@ function renderAdminLayout($title, $activeMenu, $content, $extraHead = '', $extr
             </div>
         </div>
         <?php echo $extraScripts; ?>
+        <script src="../assets/js/tech-connection.js?v=<?php echo h($techJsVersion); ?>"></script>
     </body>
     </html>
     <?php

@@ -991,28 +991,77 @@ code {
 
 .tree-board-card {
     position: relative;
+    display: block;
+    min-height: 174px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    perspective: 1000px;
+    cursor: default;
+}
+
+.tree-board-card-inner {
+    position: relative;
+    min-height: 174px;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.tree-board-card:hover .tree-board-card-inner,
+.tree-board-card:focus .tree-board-card-inner,
+.tree-board-card:focus-within .tree-board-card-inner {
+    transform: rotateY(180deg) scale(1.03);
+}
+
+.tree-board-card-face {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     gap: 14px;
-    min-height: 92px;
+    min-height: 174px;
     border: 1px solid #bfdbfe;
     border-radius: 8px;
     background: #ffffff;
-    color: inherit;
     padding: 14px 18px;
-    text-decoration: none;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    backface-visibility: hidden;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.tree-board-card:hover {
+.tree-board-card-back {
+    align-items: flex-start;
+    overflow: auto;
+    transform: rotateY(180deg);
+    border-color: rgba(217, 164, 65, 0.6);
+    background: linear-gradient(135deg, rgba(217, 164, 65, 0.13), #ffffff 58%);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.tree-board-card-back::-webkit-scrollbar {
+    display: none;
+}
+
+.tree-board-card:hover .tree-board-card-face,
+.tree-board-card:focus .tree-board-card-face,
+.tree-board-card:focus-within .tree-board-card-face {
     border-color: var(--cit-red);
     box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
-    transform: translateY(-2px);
+}
+
+.tree-board-card:focus {
+    outline: 3px solid rgba(217, 164, 65, 0.38);
+    outline-offset: 4px;
 }
 
 .tree-board-card-self {
     min-height: 118px;
+}
+
+.tree-board-card-self .tree-board-card-face {
     border: 2px solid var(--cit-red);
     background: linear-gradient(135deg, rgba(174, 17, 45, 0.12), #ffffff 58%);
 }
@@ -1048,6 +1097,34 @@ code {
     margin-top: 4px;
     color: var(--cit-muted);
     font-size: 14px;
+}
+
+.tree-board-detail-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.tree-board-detail-list div {
+    display: grid;
+    grid-template-columns: minmax(86px, 0.75fr) minmax(0, 1.25fr);
+    gap: 8px;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+    padding-top: 6px;
+}
+
+.tree-board-detail-list dt {
+    color: var(--cit-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tree-board-detail-list dd {
+    overflow-wrap: anywhere;
+    color: var(--cit-navy-dark);
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .tree-board-generations {
@@ -1131,8 +1208,12 @@ code {
 
     .tree-board-card,
     .tree-board-card-self {
-        align-items: flex-start;
-        min-height: 0;
+        min-height: 204px;
+    }
+
+    .tree-board-card-inner,
+    .tree-board-card-face {
+        min-height: 204px;
     }
 }
 

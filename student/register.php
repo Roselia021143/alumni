@@ -16,6 +16,8 @@ if (Session::isStudentLoggedIn()) {
 $error = null;
 $studentCode = '';
 $email = '';
+$techCssVersion = filemtime(__DIR__ . '/../assets/css/tech-connection.css');
+$techJsVersion = filemtime(__DIR__ . '/../assets/js/tech-connection.js');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $studentModel = new Student($conn);
@@ -57,9 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิกนักศึกษา | <?php echo h(APP_NAME); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/tech-connection.css?v=<?php echo h($techCssVersion); ?>">
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
+<body class="student-tech-page min-h-screen bg-slate-100 text-slate-900">
+    <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
     <main class="flex min-h-screen items-center justify-center px-4 py-10">
         <section class="w-full max-w-lg rounded-lg bg-white p-8 shadow-sm ring-1 ring-slate-200">
             <div class="mb-8">
@@ -100,5 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </section>
     </main>
+    <script src="../assets/js/tech-connection.js?v=<?php echo h($techJsVersion); ?>"></script>
 </body>
 </html>
