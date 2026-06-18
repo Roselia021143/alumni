@@ -15,50 +15,35 @@ class Student
         $this->studentUser = new StudentUser($conn);
     }
 
-    public function all($keyword = '', $limit = null, $offset = 0)
+    public function all($keyword = '', $limit = null, $offset = 0, $filters = [])
     {
         $keyword = trim($keyword);
+        $generation = isset($filters['generation']) ? trim((string) $filters['generation']) : '';
+        $faculty = isset($filters['faculty']) ? trim((string) $filters['faculty']) : '';
+        $major = isset($filters['major']) ? trim((string) $filters['major']) : '';
         $usePagination = $limit !== null;
         $limit = (int) $limit;
         $offset = (int) $offset;
+        $search = '%' . $keyword . '%';
+        $sql = 'SELECT s.*, p.student_code AS parent_student_code
+             FROM students s
+             LEFT JOIN students p ON s.parent_student_id = p.id
+             WHERE (? = "" OR s.student_code LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ? OR CONCAT(s.first_name, " ", s.last_name) LIKE ?)
+               AND (? = "" OR CAST(s.generation AS CHAR) = ?)
+               AND (? = "" OR s.faculty = ?)
+               AND (? = "" OR s.major = ?)
+             ORDER BY s.student_code ASC';
 
-        if ($keyword !== '') {
-            $search = '%' . $keyword . '%';
-            $sql = 'SELECT s.*, p.student_code AS parent_student_code
-                 FROM students s
-                 LEFT JOIN students p ON s.parent_student_id = p.id
-                 WHERE s.student_code LIKE ?
-                    OR s.first_name LIKE ?
-                    OR s.last_name LIKE ?
-                    OR CONCAT(s.first_name, " ", s.last_name) LIKE ?
-                 ORDER BY s.student_code ASC';
+        if ($usePagination) {
+            $sql .= ' LIMIT ? OFFSET ?';
+        }
 
-            if ($usePagination) {
-                $sql .= ' LIMIT ? OFFSET ?';
-            }
+        $stmt = $this->conn->prepare($sql);
 
-            $stmt = $this->conn->prepare($sql);
-
-            if ($usePagination) {
-                $stmt->bind_param('ssssii', $search, $search, $search, $search, $limit, $offset);
-            } else {
-                $stmt->bind_param('ssss', $search, $search, $search, $search);
-            }
+        if ($usePagination) {
+            $stmt->bind_param('sssssssssssii', $keyword, $search, $search, $search, $search, $generation, $generation, $faculty, $faculty, $major, $major, $limit, $offset);
         } else {
-            $sql = 'SELECT s.*, p.student_code AS parent_student_code
-                 FROM students s
-                 LEFT JOIN students p ON s.parent_student_id = p.id
-                 ORDER BY s.student_code ASC';
-
-            if ($usePagination) {
-                $sql .= ' LIMIT ? OFFSET ?';
-            }
-
-            $stmt = $this->conn->prepare($sql);
-
-            if ($usePagination) {
-                $stmt->bind_param('ii', $limit, $offset);
-            }
+            $stmt->bind_param('sssssssssss', $keyword, $search, $search, $search, $search, $generation, $generation, $faculty, $faculty, $major, $major);
         }
 
         $stmt->execute();
@@ -73,30 +58,52 @@ class Student
         return $students;
     }
 
-    public function countAll($keyword = '')
+    public function countAll($keyword = '', $filters = [])
     {
         $keyword = trim($keyword);
-
-        if ($keyword !== '') {
-            $search = '%' . $keyword . '%';
-            $stmt = $this->conn->prepare(
-                'SELECT COUNT(*) AS total
-                 FROM students
-                 WHERE student_code LIKE ?
-                    OR first_name LIKE ?
-                    OR last_name LIKE ?
-                    OR CONCAT(first_name, " ", last_name) LIKE ?'
-            );
-            $stmt->bind_param('ssss', $search, $search, $search, $search);
-        } else {
-            $stmt = $this->conn->prepare('SELECT COUNT(*) AS total FROM students');
-        }
+        $generation = isset($filters['generation']) ? trim((string) $filters['generation']) : '';
+        $faculty = isset($filters['faculty']) ? trim((string) $filters['faculty']) : '';
+        $major = isset($filters['major']) ? trim((string) $filters['major']) : '';
+        $search = '%' . $keyword . '%';
+        $stmt = $this->conn->prepare(
+            'SELECT COUNT(*) AS total
+             FROM students s
+             WHERE (? = "" OR s.student_code LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ? OR CONCAT(s.first_name, " ", s.last_name) LIKE ?)
+               AND (? = "" OR CAST(s.generation AS CHAR) = ?)
+               AND (? = "" OR s.faculty = ?)
+               AND (? = "" OR s.major = ?)'
+        );
+        $stmt->bind_param('sssssssssss', $keyword, $search, $search, $search, $search, $generation, $generation, $faculty, $faculty, $major, $major);
 
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
         return $row ? (int) $row['total'] : 0;
+    }
+
+    public function filterOptions()
+    {
+        $options = [
+            'generations' => [],
+            'faculties' => [],
+            'majors' => [],
+        ];
+        $queries = [
+            'generations' => 'SELECT DISTINCT generation AS value FROM students WHERE generation IS NOT NULL AND generation <> "" ORDER BY generation DESC',
+            'faculties' => 'SELECT DISTINCT faculty AS value FROM students WHERE faculty IS NOT NULL AND faculty <> "" ORDER BY faculty ASC',
+            'majors' => 'SELECT DISTINCT major AS value FROM students WHERE major IS NOT NULL AND major <> "" ORDER BY major ASC',
+        ];
+
+        foreach ($queries as $key => $sql) {
+            $result = $this->conn->query($sql);
+
+            while ($row = $result->fetch_assoc()) {
+                $options[$key][] = $row['value'];
+            }
+        }
+
+        return $options;
     }
 
     public function find($id)

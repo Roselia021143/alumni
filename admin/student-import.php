@@ -23,6 +23,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$supportedHeaders = [
+    'student_code' => 'รหัสนักศึกษา',
+    'first_name' => 'ชื่อจริง',
+    'last_name' => 'นามสกุล',
+    'nickname' => 'ชื่อเล่น',
+    'generation' => 'ปีการศึกษา / รุ่น',
+    'faculty' => 'คณะ',
+    'major' => 'สาขา',
+    'phone' => 'เบอร์โทร',
+    'facebook' => 'Facebook',
+    'instagram' => 'Instagram',
+    'line_id_contact' => 'Line ID',
+    'profile_image' => 'รูปโปรไฟล์',
+    'parent_student_code' => 'สายรหัส (รหัสพี่รหัส)',
+];
+
 ob_start();
 ?>
 <?php if ($resultText): ?>
@@ -51,9 +67,22 @@ ob_start();
             >
         </div>
 
-        <div class="rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-            Header ที่รองรับ:
-            <code>รหัสนักศึกษา , ชื่อจริง , นามสกุล , ชื่อเล่น , ปีการศึกษา , คณะ , สาขา , เบอร์โทร ,facebook , instagram , line id , รูป , สายรหัส</code>
+        <div class="rounded-lg border border-emerald-400/20 bg-slate-50 p-5">
+            <div class="mb-4">
+                <h3 class="text-base font-bold text-emerald-300">Header ที่รองรับในไฟล์ CSV</h3>
+                <p class="mt-1 text-sm text-cyan-100/80">ใช้ชื่อคอลัมน์ภาษาอังกฤษด้านล่างเป็นแถวแรกของไฟล์</p>
+            </div>
+
+            <ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <?php foreach ($supportedHeaders as $header => $label): ?>
+                    <li class="rounded-md border border-white/10 bg-white/5 px-3 py-2.5">
+                        <code class="block font-bold text-yellow-300"><?php echo h($header); ?></code>
+                        <span class="mt-1 block text-xs font-medium text-cyan-100"><?php echo h($label); ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+
+            <p class="mt-4 text-xs font-medium text-amber-200">คอลัมน์ที่จำเป็น: student_code, first_name และ last_name</p>
         </div>
 
         <div class="flex gap-2">
