@@ -34,6 +34,7 @@ function renderStudentLayout($title, $content)
                 <nav class="flex flex-wrap items-center gap-2">
                     <a href="profile.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">โปรไฟล์ของฉัน</a>
                     <a href="tree.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">สายรหัส</a>
+                    <a href="line-manage.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">ผูกสายรหัส</a>
                     <a href="edit-profile.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">แก้ไขข้อมูล</a>
                     <a href="portfolio-manage.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">Portfolio</a>
                     <a href="logout.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">ออกจากระบบ</a>

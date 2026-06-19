@@ -270,6 +270,7 @@ ob_start();
             <div class="profile-section-title"><span>NET</span><h3>สายรหัส</h3></div>
             <div class="profile-lineage-stats"><div><strong><?php echo count($ancestors); ?></strong><span>รุ่นพี่</span></div><div><strong><?php echo count($descendants); ?></strong><span>รุ่นน้อง</span></div></div>
             <a href="tree.php" class="profile-wide-link">ดูแผนผังสายรหัส →</a>
+            <?php if ($isOwner): ?><a href="line-manage.php" class="profile-wide-link">ผูกหรือแก้ไขสายรหัส →</a><?php endif; ?>
         </section>
 
         <section class="profile-panel">
