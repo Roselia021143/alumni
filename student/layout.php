@@ -26,20 +26,21 @@ function renderStudentLayout($title, $content)
         <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
 
         <header class="border-b border-slate-200 bg-white">
-            <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
                 <div>
-                    
+                    <p class="text-xs font-semibold uppercase tracking-widest text-teal-700">CIT Code Line</p>
                     <h1 class="text-xl font-bold"><?php echo h($title); ?></h1>
                 </div>
                 <nav class="flex flex-wrap items-center gap-2">
-                    <a href="dashboard.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">หน้าแรก</a>
+                    <a href="profile.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">โปรไฟล์ของฉัน</a>
+                    <a href="tree.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">สายรหัส</a>
                     <a href="edit-profile.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">แก้ไขข้อมูล</a>
-                    <a href="line-manage.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">ผูกสายรหัส</a>
+                    <a href="portfolio-manage.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">Portfolio</a>
                     <a href="logout.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">ออกจากระบบ</a>
                 </nav>
             </div>
         </header>
-        <main class="mx-auto max-w-6xl px-4 py-8">
+        <main class="mx-auto max-w-7xl px-4 py-8">
             <?php echo $content; ?>
         </main>
         <script src="../assets/js/tech-connection.js?v=<?php echo h($techJsVersion); ?>"></script>

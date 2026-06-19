@@ -17,7 +17,7 @@ $success = null;
 $error = null;
 
 if (!$student) {
-    header('Location: dashboard.php');
+    header('Location: profile.php');
     exit;
 }
 

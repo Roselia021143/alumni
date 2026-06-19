@@ -11,7 +11,7 @@ $showAll = isset($_GET['all']) && $_GET['all'] === '1';
 $tree = $studentModel->getTree($studentId, $showAll ? null : 2, $showAll ? null : 2);
 
 if (!$tree) {
-    header('Location: dashboard.php');
+    header('Location: profile.php');
     exit;
 }
 

@@ -4,8 +4,10 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/layout.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../classes/Student.php';
+require_once __DIR__ . '/../classes/StudentProfile.php';
 
 $studentModel = new Student($conn);
+$profileModel = new StudentProfile($conn);
 $studentId = Session::studentId();
 $student = $studentModel->find($studentId);
 $success = null;
@@ -111,6 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $studentModel->updateOwnProfile($studentId, $_POST);
+        $profileModel->updateOverview($studentId, $_POST);
         $success = 'บันทึกข้อมูลเรียบร้อยแล้ว';
         $student = $studentModel->find($studentId);
     } catch (Exception $exception) {
@@ -147,6 +150,9 @@ $majorOptions = [
     'เทคโนโลยีมัลติมีเดียและแอนิเมชัน',
     'เทคโนโลยีสารสนเทศ',
 ];
+
+$portfolio = $profileModel->getPortfolio($studentId);
+$skillValue = implode(', ', array_column($portfolio['skills'], 'skill_name'));
 
 ob_start();
 ?>
@@ -211,6 +217,87 @@ ob_start();
         </div>
     </div>
 
+    <section class="mt-6 rounded-lg border border-slate-200 p-5">
+        <div class="mb-5">
+            <p class="text-sm font-semibold text-teal-700">Profile &amp; Portfolio</p>
+            <h3 class="mt-1 text-lg font-semibold">ข้อมูลแนะนำตัวและสถานะปัจจุบัน</h3>
+        </div>
+        <div class="grid gap-5 md:grid-cols-2">
+            <label>
+                <span class="mb-2 block text-sm font-medium">สถานะการศึกษา</span>
+                <select name="education_status" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+                    <?php foreach (['unspecified' => 'ยังไม่ระบุ', 'studying' => 'กำลังศึกษา', 'graduated' => 'สำเร็จการศึกษาแล้ว', 'on_leave' => 'พักการศึกษา'] as $value => $label): ?>
+                        <option value="<?php echo h($value); ?>" <?php echo ($student['education_status'] ?? 'unspecified') === $value ? 'selected' : ''; ?>><?php echo h($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">สถานะการทำงาน</span>
+                <select name="employment_status" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+                    <?php foreach (['unspecified' => 'ยังไม่ระบุ', 'looking_for_internship' => 'กำลังหาที่ฝึกงาน', 'looking_for_work' => 'กำลังหางาน', 'employed' => 'กำลังทำงาน', 'freelance' => 'Freelance', 'business_owner' => 'เจ้าของธุรกิจ', 'not_available' => 'ยังไม่เปิดรับโอกาส'] as $value => $label): ?>
+                        <option value="<?php echo h($value); ?>" <?php echo ($student['employment_status'] ?? 'unspecified') === $value ? 'selected' : ''; ?>><?php echo h($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">ชั้นปีปัจจุบัน</span>
+                <input name="current_study_year" type="number" min="1" max="8" value="<?php echo h($student['current_study_year'] ?? ''); ?>" placeholder="เช่น 3" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">ปีที่คาดว่าจะจบ (พ.ศ.)</span>
+                <input name="expected_graduation_year" type="number" min="2400" max="2700" value="<?php echo h($student['expected_graduation_year'] ?? ''); ?>" placeholder="เช่น 2569" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">ปีที่สำเร็จการศึกษา (พ.ศ.)</span>
+                <input name="graduation_year" type="number" min="2400" max="2700" value="<?php echo h($student['graduation_year'] ?? ''); ?>" placeholder="กรอกเมื่อสำเร็จการศึกษาแล้ว" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">การมองเห็นโปรไฟล์</span>
+                <select name="profile_visibility" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+                    <?php foreach (['private' => 'เฉพาะฉัน', 'members' => 'สมาชิกที่เข้าสู่ระบบ', 'public' => 'สาธารณะ'] as $value => $label): ?>
+                        <option value="<?php echo h($value); ?>" <?php echo ($student['profile_visibility'] ?? 'members') === $value ? 'selected' : ''; ?>><?php echo h($label); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label class="md:col-span-2">
+                <span class="mb-2 block text-sm font-medium">Headline</span>
+                <input name="headline" maxlength="180" value="<?php echo h($student['headline'] ?? ''); ?>" placeholder="เช่น นักศึกษาวิทยาการคอมพิวเตอร์ สนใจ Frontend Development" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label class="md:col-span-2">
+                <span class="mb-2 block text-sm font-medium">เกี่ยวกับฉัน</span>
+                <textarea name="bio" rows="5" placeholder="แนะนำตัว ความสนใจ และเป้าหมายของคุณ" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"><?php echo h($student['bio'] ?? ''); ?></textarea>
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">ตำแหน่งปัจจุบัน</span>
+                <input name="current_position" value="<?php echo h($student['current_position'] ?? ''); ?>" placeholder="เช่น Frontend Developer" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">บริษัท / องค์กร</span>
+                <input name="current_company" value="<?php echo h($student['current_company'] ?? ''); ?>" placeholder="ชื่อบริษัทหรือองค์กร" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">สถานที่ทำงาน</span>
+                <input name="work_location" value="<?php echo h($student['work_location'] ?? ''); ?>" placeholder="จังหวัด หรือรูปแบบ Remote/Hybrid" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">Website</span>
+                <input name="website_url" type="url" value="<?php echo h($student['website_url'] ?? ''); ?>" placeholder="https://example.com" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">GitHub</span>
+                <input name="github_url" type="url" value="<?php echo h($student['github_url'] ?? ''); ?>" placeholder="https://github.com/username" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label>
+                <span class="mb-2 block text-sm font-medium">LinkedIn</span>
+                <input name="linkedin_url" type="url" value="<?php echo h($student['linkedin_url'] ?? ''); ?>" placeholder="https://linkedin.com/in/username" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            </label>
+            <label class="md:col-span-2">
+                <span class="mb-2 block text-sm font-medium">ทักษะ</span>
+                <textarea name="skills" rows="3" placeholder="HTML, CSS, JavaScript, UI/UX (คั่นแต่ละทักษะด้วยเครื่องหมายจุลภาค)" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"><?php echo h($skillValue); ?></textarea>
+            </label>
+        </div>
+    </section>
+
     <section class="mt-6 rounded-md bg-slate-50 p-4">
         <h3 class="font-semibold">การเปิดเผยข้อมูล</h3>
         <p class="mt-1 text-sm text-slate-600">ชื่อจริง นามสกุล ชื่อเล่น คณะ และสาขา จะแสดงเสมอ</p>
@@ -225,6 +312,13 @@ ob_start();
                 'instagram_visible' => 'เปิดเผย Instagram',
                 'line_id_contact_visible' => 'เปิดเผย Line ID',
                 'profile_image_visible' => 'เปิดเผยรูปโปรไฟล์',
+                'about_visible' => 'แสดงข้อมูลเกี่ยวกับฉัน',
+                'education_visible' => 'แสดงข้อมูลการศึกษา',
+                'employment_visible' => 'แสดงข้อมูลการทำงาน',
+                'skills_visible' => 'แสดงทักษะ',
+                'projects_visible' => 'แสดงผลงาน',
+                'experiences_visible' => 'แสดงประสบการณ์',
+                'activities_visible' => 'แสดงกิจกรรมและความสำเร็จ',
             ];
             ?>
             <?php foreach ($privacyFields as $field => $label): ?>
@@ -240,7 +334,7 @@ ob_start();
     </section>
 
     <div class="mt-6 flex justify-end gap-2">
-        <a href="dashboard.php" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">กลับ</a>
+        <a href="profile.php" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">กลับ</a>
         <button type="submit" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">บันทึก</button>
     </div>
 </form>

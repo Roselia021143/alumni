@@ -8,7 +8,7 @@ require_once __DIR__ . '/../classes/Student.php';
 Session::start();
 
 if (Session::isStudentLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($authenticatedUser) {
         Session::studentLogin($authenticatedUser);
-        header('Location: dashboard.php');
+        header('Location: profile.php');
         exit;
     }
 

@@ -14,7 +14,7 @@ $offset = ($page - 1) * $perPage;
 $lineagePage = $studentModel->getLineagePage($studentId, $direction, $perPage, $offset);
 
 if (!$lineagePage) {
-    header('Location: dashboard.php');
+    header('Location: profile.php');
     exit;
 }
 
@@ -52,7 +52,7 @@ ob_start();
         <a href="line.php?direction=up" class="rounded-md border px-4 py-2 text-sm font-semibold <?php echo $direction === 'up' ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 hover:bg-slate-50'; ?>">รุ่นพี่ขึ้นไป</a>
         <a href="line.php?direction=down" class="rounded-md border px-4 py-2 text-sm font-semibold <?php echo $direction === 'down' ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-300 hover:bg-slate-50'; ?>">รุ่นน้องลงไป</a>
     </div>
-    <a href="dashboard.php" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">กลับหน้าแรก</a>
+    <a href="profile.php" class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">กลับโปรไฟล์</a>
 </section>
 
 <section class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">

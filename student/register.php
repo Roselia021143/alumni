@@ -9,7 +9,7 @@ require_once __DIR__ . '/../classes/ViewHelper.php';
 Session::start();
 
 if (Session::isStudentLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: profile.php');
     exit;
 }
 
