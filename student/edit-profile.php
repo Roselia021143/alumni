@@ -38,13 +38,37 @@ function uploadProfileImage($file, $studentCode)
     }
 
     $allowedTypes = [
-        IMAGETYPE_JPEG => 'jpg',
-        IMAGETYPE_PNG => 'png',
-        IMAGETYPE_WEBP => 'webp',
+        IMAGETYPE_JPEG => ['extension' => 'jpg', 'mime' => 'image/jpeg'],
+        IMAGETYPE_PNG => ['extension' => 'png', 'mime' => 'image/png'],
     ];
+
+    if (defined('IMAGETYPE_WEBP')) {
+        $allowedTypes[IMAGETYPE_WEBP] = ['extension' => 'webp', 'mime' => 'image/webp'];
+    }
 
     if (!isset($allowedTypes[$imageInfo[2]])) {
         throw new RuntimeException('รองรับเฉพาะไฟล์ JPG, PNG หรือ WEBP');
+    }
+
+    $imageType = $allowedTypes[$imageInfo[2]];
+    $detectedMime = isset($imageInfo['mime']) ? strtolower((string) $imageInfo['mime']) : '';
+
+    if ($detectedMime !== $imageType['mime']) {
+        throw new RuntimeException('ชนิดไฟล์รูปภาพไม่ตรงกับข้อมูลภายในไฟล์');
+    }
+
+    if (defined('IMAGETYPE_WEBP') && $imageInfo[2] === IMAGETYPE_WEBP) {
+        if (!function_exists('imagecreatefromwebp')) {
+            throw new RuntimeException('เซิร์ฟเวอร์ยังไม่รองรับการประมวลผลไฟล์ WEBP');
+        }
+
+        $webpImage = @imagecreatefromwebp($file['tmp_name']);
+
+        if ($webpImage === false) {
+            throw new RuntimeException('ไฟล์ WEBP เสียหายหรืออยู่ในรูปแบบที่ไม่รองรับ');
+        }
+
+        imagedestroy($webpImage);
     }
 
     $uploadDir = __DIR__ . '/../assets/uploads/students';
@@ -54,7 +78,7 @@ function uploadProfileImage($file, $studentCode)
     }
 
     $safeCode = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $studentCode);
-    $fileName = $safeCode . '-' . time() . '.' . $allowedTypes[$imageInfo[2]];
+    $fileName = $safeCode . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $imageType['extension'];
     $targetPath = $uploadDir . '/' . $fileName;
 
     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
@@ -181,7 +205,8 @@ ob_start();
         <input name="line_id_contact" value="<?php echo h($student['line_id_contact']); ?>" placeholder="Line ID" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <div class="md:col-span-2">
             <label for="profile_image_file" class="mb-2 block text-sm font-medium">รูปโปรไฟล์</label>
-            <input id="profile_image_file" name="profile_image_file" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-teal-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-teal-800">
+            <input id="profile_image_file" name="profile_image_file" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" class="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-teal-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-teal-800">
+            <p class="mt-2 text-xs text-slate-500">รองรับไฟล์ JPG, PNG และ WEBP ขนาดไม่เกิน 2MB</p>
             <p class="mt-2 text-xs text-slate-500">รองรับ JPG, PNG, WEBP ขนาดไม่เกิน 2MB ถ้าไม่เลือกรูปใหม่ ระบบจะใช้รูปเดิม</p>
         </div>
     </div>
