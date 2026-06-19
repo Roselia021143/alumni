@@ -261,6 +261,12 @@ class Student
     {
         $data = $this->normalize($data);
 
+        foreach (['first_name', 'last_name', 'faculty', 'major'] as $requiredField) {
+            if ($data[$requiredField] === '') {
+                throw new RuntimeException('กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบถ้วน');
+            }
+        }
+
         $stmt = $this->conn->prepare(
             'UPDATE students
              SET first_name = ?, last_name = ?, nickname = ?, faculty = ?, major = ?,

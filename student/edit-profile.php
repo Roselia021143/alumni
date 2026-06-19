@@ -66,6 +66,19 @@ function uploadProfileImage($file, $studentCode)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        $requiredProfileFields = [
+            'first_name' => 'ชื่อ',
+            'last_name' => 'นามสกุล',
+            'faculty' => 'คณะ',
+            'major' => 'สาขา',
+        ];
+
+        foreach ($requiredProfileFields as $field => $label) {
+            if (!isset($_POST[$field]) || trim((string) $_POST[$field]) === '') {
+                throw new RuntimeException('กรุณากรอก' . $label);
+            }
+        }
+
         $_POST['profile_image'] = isset($student['profile_image']) ? $student['profile_image'] : '';
         $uploadedProfileImage = uploadProfileImage(isset($_FILES['profile_image_file']) ? $_FILES['profile_image_file'] : null, $student['student_code']);
 
@@ -131,21 +144,36 @@ ob_start();
     </div>
 
     <div class="grid gap-5 md:grid-cols-2">
-        <input name="first_name" required value="<?php echo h($student['first_name']); ?>" placeholder="ชื่อจริง" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-        <input name="last_name" required value="<?php echo h($student['last_name']); ?>" placeholder="นามสกุล" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-        <input name="nickname" required value="<?php echo h($student['nickname']); ?>" placeholder="ชื่อเล่น" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
-        <select name="faculty" required class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
-            <option value="">เลือกคณะ</option>
-            <?php foreach ($facultyOptions as $faculty): ?>
-                <option value="<?php echo h($faculty); ?>" <?php echo (isset($student['faculty']) && $student['faculty'] === $faculty) ? 'selected' : ''; ?>><?php echo h($faculty); ?></option>
-            <?php endforeach; ?>
-        </select>
-        <select name="major" required class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
-            <option value="">เลือกสาขา</option>
-            <?php foreach ($majorOptions as $major): ?>
-                <option value="<?php echo h($major); ?>" <?php echo (isset($student['major']) && $student['major'] === $major) ? 'selected' : ''; ?>><?php echo h($major); ?></option>
-            <?php endforeach; ?>
-        </select>
+        <label>
+            <span class="mb-2 block text-sm font-medium">ชื่อ <span class="text-red-400" aria-hidden="true">*</span></span>
+            <input name="first_name" required value="<?php echo h($student['first_name']); ?>" placeholder="ชื่อจริง" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+        </label>
+        <label>
+            <span class="mb-2 block text-sm font-medium">นามสกุล <span class="text-red-400" aria-hidden="true">*</span></span>
+            <input name="last_name" required value="<?php echo h($student['last_name']); ?>" placeholder="นามสกุล" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+        </label>
+        <label>
+            <span class="mb-2 block text-sm font-medium">ชื่อเล่น</span>
+            <input name="nickname" value="<?php echo h($student['nickname']); ?>" placeholder="ชื่อเล่น" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+        </label>
+        <label>
+            <span class="mb-2 block text-sm font-medium">คณะ <span class="text-red-400" aria-hidden="true">*</span></span>
+            <select name="faculty" required class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="">เลือกคณะ</option>
+                <?php foreach ($facultyOptions as $faculty): ?>
+                    <option value="<?php echo h($faculty); ?>" <?php echo (isset($student['faculty']) && $student['faculty'] === $faculty) ? 'selected' : ''; ?>><?php echo h($faculty); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>
+            <span class="mb-2 block text-sm font-medium">สาขา <span class="text-red-400" aria-hidden="true">*</span></span>
+            <select name="major" required class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="">เลือกสาขา</option>
+                <?php foreach ($majorOptions as $major): ?>
+                    <option value="<?php echo h($major); ?>" <?php echo (isset($student['major']) && $student['major'] === $major) ? 'selected' : ''; ?>><?php echo h($major); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
         <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" value="<?php echo h(formatPhoneForInput($student['phone'])); ?>" placeholder="099-999-9999" title="กรุณากรอกเบอร์โทร 10 หลัก เช่น 099-999-9999" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
         <input type="email" value="<?php echo h(isset($student['email']) ? $student['email'] : ''); ?>" placeholder="Email" readonly class="rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500" title="Email ที่ใช้สมัครสมาชิก">
         <input name="facebook" value="<?php echo h($student['facebook']); ?>" placeholder="Facebook" class="rounded-md border border-slate-300 px-3 py-2 text-sm">
