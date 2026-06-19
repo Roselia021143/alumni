@@ -7,6 +7,7 @@
 3. `03_student_users.sql`
 4. `04_system_settings.sql`
 5. `05_student_line_requests.sql`
+6. `06_update_multimedia_major_name.sql` (ใช้สำหรับปรับชื่อสาขาในข้อมูลเดิม)
 
 เหตุผลที่ต้องเรียงลำดับ:
 
@@ -15,4 +16,3 @@
 - `students.parent_student_id` เป็น Foreign Key อ้างอิงตาราง `students` เดียวกัน
 
 ไฟล์ทั้งหมดไม่ระบุชื่อฐานข้อมูลด้วยคำสั่ง `USE` เพื่อให้ใช้ได้ทั้งฐานข้อมูล local (`alumni_db`) และฐานข้อมูลมหาวิทยาลัย (`citservice_db`) โดยต้องเลือกฐานข้อมูลให้ถูกต้องก่อน Import
-
