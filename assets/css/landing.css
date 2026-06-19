@@ -114,8 +114,9 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 .section-title span:last-child { background: linear-gradient(90deg, rgba(57,233,154,.55), transparent); }
 .section-title h2 { margin: 0; font-size: 18px; }
 .program-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; margin-top: 19px; }
-.program-grid article { display: flex; min-height: 73px; align-items: center; justify-content: center; gap: 20px; border: 1px solid rgba(86,217,166,.3); border-radius: 11px; background: rgba(9,28,47,.78); padding: 12px; text-align: center; }
-.program-grid article:hover { border-color: var(--green); background: rgba(25,65,71,.6); }
+.program-grid a { position: relative; display: flex; min-height: 73px; align-items: center; justify-content: center; gap: 20px; border: 1px solid rgba(86,217,166,.3); border-radius: 11px; background: rgba(9,28,47,.78); padding: 12px 12px 25px; text-align: center; transition: border-color .2s, background .2s, transform .2s; }
+.program-grid a:hover, .program-grid a:focus-visible { border-color: var(--green); outline: 0; background: rgba(25,65,71,.6); transform: translateY(-2px); }
+.program-grid a span { position: absolute; right: 12px; bottom: 6px; color: var(--green); font-size: 10px; font-weight: 600; opacity: .72; }
 .program-grid svg { width: 32px; height: 32px; color: #d9e4ef; }
 .program-grid strong { font-size: 14px; }
 

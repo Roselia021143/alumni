@@ -100,9 +100,9 @@ $landingJsVersion = filemtime(__DIR__ . '/assets/js/landing.js');
             <section id="programs" class="programs" aria-labelledby="programsTitle">
                 <div class="section-title"><span></span><h2 id="programsTitle">3 หลักสูตรของเรา</h2><span></span></div>
                 <div class="program-grid">
-                    <article><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4V5Zm4 16h8m-4-4v4m-4-9 2-2-2-2m5 4h3"/></svg><strong>วิทยาการคอมพิวเตอร์</strong></article>
-                    <article><svg viewBox="0 0 24 24"><path d="M4 6c0-2 4-3 8-3s8 1 8 3-4 3-8 3-8-1-8-3Zm0 0v6c0 2 4 3 8 3s8-1 8-3V6m-16 6v6c0 2 4 3 8 3s8-1 8-3v-6"/></svg><strong>เทคโนโลยีสารสนเทศ</strong></article>
-                    <article><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3V5Zm4 0v14M17 5v14M3 9h4m10 0h4M3 15h4m10 0h4"/></svg><strong>เทคโนโลยีมัลติมีเดีย<br>และแอนิเมชัน</strong></article>
+                    <a href="program-lines.php?program=computer-science" aria-label="ดูสายรหัสหลักสูตรวิทยาการคอมพิวเตอร์"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H4V5Zm4 16h8m-4-4v4m-4-9 2-2-2-2m5 4h3"/></svg><strong>วิทยาการคอมพิวเตอร์</strong><span>ดูสายรหัส →</span></a>
+                    <a href="program-lines.php?program=information-technology" aria-label="ดูสายรหัสหลักสูตรเทคโนโลยีสารสนเทศ"><svg viewBox="0 0 24 24"><path d="M4 6c0-2 4-3 8-3s8 1 8 3-4 3-8 3-8-1-8-3Zm0 0v6c0 2 4 3 8 3s8-1 8-3V6m-16 6v6c0 2 4 3 8 3s8-1 8-3v-6"/></svg><strong>เทคโนโลยีสารสนเทศ</strong><span>ดูสายรหัส →</span></a>
+                    <a href="program-lines.php?program=multimedia" aria-label="ดูสายรหัสหลักสูตรเทคโนโลยีมัลติมีเดียและแอนิเมชัน"><svg viewBox="0 0 24 24"><path d="M3 5h18v14H3V5Zm4 0v14M17 5v14M3 9h4m10 0h4M3 15h4m10 0h4"/></svg><strong>เทคโนโลยีมัลติมีเดีย<br>และแอนิเมชัน</strong><span>ดูสายรหัส →</span></a>
                 </div>
             </section>
         </section>

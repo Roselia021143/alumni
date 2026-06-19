@@ -525,6 +525,62 @@ class Student
         ];
     }
 
+    public function publicProgramForest(array $keywords)
+    {
+        $result = $this->conn->query(
+            'SELECT id, first_name, last_name, nickname, generation, major, parent_student_id
+             FROM students
+             WHERE major IS NOT NULL AND major <> ""
+             ORDER BY generation ASC, student_code ASC'
+        );
+        $students = [];
+
+        while ($student = $result->fetch_assoc()) {
+            $major = trim((string) $student['major']);
+            $matches = false;
+
+            foreach ($keywords as $keyword) {
+                if ($keyword !== '' && mb_stripos($major, $keyword, 0, 'UTF-8') !== false) {
+                    $matches = true;
+                    break;
+                }
+            }
+
+            if ($matches) {
+                $student['id'] = (int) $student['id'];
+                $student['parent_student_id'] = $student['parent_student_id'] === null
+                    ? null
+                    : (int) $student['parent_student_id'];
+                $students[$student['id']] = $student;
+            }
+        }
+
+        $roots = [];
+        $childrenByParent = [];
+
+        foreach ($students as $student) {
+            $parentId = $student['parent_student_id'];
+
+            if ($parentId === null || !isset($students[$parentId]) || $parentId === $student['id']) {
+                $roots[] = $student;
+                continue;
+            }
+
+            if (!isset($childrenByParent[$parentId])) {
+                $childrenByParent[$parentId] = [];
+            }
+
+            $childrenByParent[$parentId][] = $student;
+        }
+
+        return [
+            'roots' => $roots,
+            'children_by_parent' => $childrenByParent,
+            'total_students' => count($students),
+            'total_lines' => count($roots),
+        ];
+    }
+
     public function academicMajorStats($currentAcademicYear)
     {
         $majors = [

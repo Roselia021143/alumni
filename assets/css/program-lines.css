@@ -1,0 +1,75 @@
+:root {
+    --bg: #06111f;
+    --panel: #0b1d30;
+    --green: #42e7a0;
+    --text: #f6f9fc;
+    --muted: #9fb0c3;
+    --connector: rgba(66, 231, 160, .48);
+}
+
+* { box-sizing: border-box; }
+html, body { min-width: 320px; min-height: 100%; margin: 0; }
+body { background: radial-gradient(circle at 50% 0, #12324a, transparent 40%), var(--bg); color: var(--text); font-family: Prompt, Tahoma, sans-serif; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; }
+
+.lineage-header { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(255,255,255,.09); padding: 12px clamp(18px, 4vw, 64px); background: rgba(4,14,26,.82); backdrop-filter: blur(16px); }
+.lineage-brand { display: flex; align-items: center; gap: 11px; }
+.lineage-brand img { width: 42px; height: 42px; object-fit: contain; }
+.lineage-brand strong, .lineage-brand small { display: block; }
+.lineage-brand small { color: var(--muted); font-size: 10px; }
+.back-link { border: 1px solid rgba(255,255,255,.16); border-radius: 10px; padding: 9px 13px; color: #dbe5ef; font-size: 13px; }
+.back-link:hover { border-color: var(--green); color: var(--green); }
+
+main { width: min(1500px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0; }
+.lineage-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 22px; }
+.lineage-intro p { margin: 0 0 5px; color: var(--green); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.lineage-intro h1 { margin: 0; font-size: clamp(25px, 3vw, 40px); line-height: 1.25; }
+.lineage-intro > div > span { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; }
+.lineage-summary { display: flex; gap: 10px; }
+.lineage-summary article { min-width: 100px; border: 1px solid rgba(66,231,160,.2); border-radius: 12px; background: rgba(11,29,48,.8); padding: 13px 17px; text-align: center; }
+.lineage-summary strong, .lineage-summary span { display: block; }
+.lineage-summary strong { color: var(--green); font-size: 25px; }
+.lineage-summary span { color: var(--muted); font-size: 11px; }
+
+.lineage-map { position: relative; overflow: hidden; border: 1px solid rgba(117,156,188,.24); border-radius: 18px; background: var(--panel); box-shadow: 0 25px 80px rgba(0,0,0,.3); }
+.map-toolbar { position: absolute; top: 14px; right: 14px; z-index: 5; display: flex; align-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: 11px; background: rgba(4,15,27,.9); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.map-toolbar button, .map-toolbar output { display: grid; min-width: 42px; height: 40px; place-items: center; border: 0; border-right: 1px solid rgba(255,255,255,.1); background: transparent; color: var(--text); }
+.map-toolbar button { cursor: pointer; font-size: 20px; }
+.map-toolbar button:hover { background: rgba(66,231,160,.14); color: var(--green); }
+.map-toolbar output { min-width: 58px; color: var(--muted); font-size: 11px; }
+.map-toolbar .fit-button { min-width: 76px; border-right: 0; padding: 0 11px; font-size: 12px; }
+
+.lineage-viewport { position: relative; height: min(70vh, 760px); min-height: 480px; overflow: auto; overscroll-behavior: contain; cursor: grab; scrollbar-color: rgba(66,231,160,.38) transparent; touch-action: none; background: linear-gradient(rgba(133,169,198,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(133,169,198,.07) 1px, transparent 1px), radial-gradient(circle at 50% 20%, rgba(31,91,102,.23), transparent 38%); background-size: 36px 36px, 36px 36px, auto; }
+.lineage-viewport.is-dragging { cursor: grabbing; user-select: none; }
+.lineage-stage { position: relative; min-width: 100%; min-height: 100%; }
+.lineage-canvas { position: absolute; top: 0; left: 0; width: max-content; transform-origin: 0 0; padding: 90px 70px 100px; }
+.lineage-forest, .lineage-forest ul { display: flex; justify-content: center; gap: 30px; margin: 0; padding: 42px 0 0; list-style: none; }
+.lineage-forest { gap: 70px; padding-top: 0; }
+.lineage-forest ul { position: relative; }
+.lineage-forest li { position: relative; display: flex; align-items: center; flex-direction: column; }
+.lineage-forest ul::before { content: ""; position: absolute; top: 0; left: 50%; height: 21px; border-left: 2px solid var(--connector); }
+.lineage-forest ul::after { content: ""; position: absolute; top: 21px; left: 50%; width: calc(100% - 210px); border-top: 2px solid var(--connector); transform: translateX(-50%); }
+.lineage-forest ul:has(> li:only-child)::after { display: none; }
+.lineage-forest ul:has(> li:only-child)::before { height: 42px; }
+.lineage-forest ul > li::before { content: ""; position: absolute; top: -21px; height: 21px; border-left: 2px solid var(--connector); }
+.lineage-forest ul > li:only-child::before { display: none; }
+.lineage-node { position: relative; z-index: 1; width: 210px; min-height: 84px; border: 1px solid rgba(102,190,173,.45); border-top: 3px solid var(--green); border-radius: 12px; background: linear-gradient(145deg, rgba(18,48,70,.98), rgba(9,27,45,.98)); padding: 14px 16px; text-align: center; box-shadow: 0 11px 25px rgba(0,0,0,.24); }
+.lineage-node h3 { margin: 0; font-size: 14px; line-height: 1.45; }
+.lineage-node p { margin: 7px 0 0; color: var(--green); font-size: 11px; font-weight: 600; }
+.lineage-empty { display: grid; width: min(420px, calc(100vw - 100px)); min-height: 180px; place-content: center; border: 1px dashed rgba(66,231,160,.4); border-radius: 14px; text-align: center; }
+.lineage-empty span { margin-top: 8px; color: var(--muted); font-size: 12px; }
+.map-hint { margin: 0; border-top: 1px solid rgba(255,255,255,.08); padding: 10px 16px; color: var(--muted); font-size: 11px; text-align: center; }
+
+@media (max-width: 700px) {
+    main { width: calc(100% - 24px); padding: 24px 0; }
+    .lineage-intro { align-items: stretch; flex-direction: column; }
+    .lineage-summary article { flex: 1; }
+    .lineage-viewport { height: 65vh; min-height: 430px; }
+    .map-toolbar { top: 9px; right: 9px; }
+    .lineage-canvas { padding: 78px 40px; }
+    .back-link { font-size: 0; }
+    .back-link::after { content: "← กลับ"; font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
