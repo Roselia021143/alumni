@@ -980,9 +980,9 @@ body.student-tech-page::before {
     color: var(--tc-text) !important;
 }
 
-.admin-tech-page .admin-content > section.grid,
-.admin-tech-page .admin-content > section.flex {
+.admin-tech-page .admin-content > section {
     border: 0 !important;
+    border-radius: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
