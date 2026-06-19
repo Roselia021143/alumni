@@ -5,6 +5,7 @@
     const authPanels = document.querySelectorAll('[data-auth-panel]');
     const authNote = document.querySelector('[data-auth-note]');
     const authTitle = document.getElementById('loginTitle');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (menuButton && navigation) {
         menuButton.addEventListener('click', function () {
@@ -20,7 +21,10 @@
         });
     }
 
-    function selectAuthPanel(mode) {
+    function selectAuthPanel(mode, shouldAnimate) {
+        const loginPanel = document.querySelector('.login-panel');
+        const startHeight = loginPanel ? loginPanel.offsetHeight : 0;
+
         authPanels.forEach(function (panel) {
             panel.classList.toggle('is-active', panel.dataset.authPanel === mode);
         });
@@ -43,13 +47,29 @@
         if (authTitle) {
             authTitle.textContent = mode === 'login' ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก';
         }
+
+        if (shouldAnimate && !reducedMotion && loginPanel && typeof loginPanel.animate === 'function') {
+            const endHeight = loginPanel.offsetHeight;
+
+            if (startHeight !== endHeight) {
+                loginPanel.style.overflow = 'hidden';
+                const heightAnimation = loginPanel.animate(
+                    [{ height: startHeight + 'px' }, { height: endHeight + 'px' }],
+                    { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' }
+                );
+
+                heightAnimation.addEventListener('finish', function () {
+                    loginPanel.style.overflow = '';
+                }, { once: true });
+            }
+        }
     }
 
     document.addEventListener('click', function (event) {
         const authSwitch = event.target.closest('[data-auth-switch]');
 
         if (authSwitch) {
-            selectAuthPanel(authSwitch.dataset.authSwitch);
+            selectAuthPanel(authSwitch.dataset.authSwitch, true);
         }
     });
 
@@ -64,5 +84,5 @@
     });
 
     const initialPanel = document.querySelector('[data-auth-panel].is-active');
-    selectAuthPanel(initialPanel ? initialPanel.dataset.authPanel : 'login');
+    selectAuthPanel(initialPanel ? initialPanel.dataset.authPanel : 'login', false);
 }());
