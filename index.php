@@ -1,7 +1,9 @@
 <?php
 
 require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/classes/Session.php';
+require_once __DIR__ . '/classes/Student.php';
 
 Session::start();
 
@@ -14,6 +16,9 @@ if (Session::isStudentLoggedIn()) {
     header('Location: student/dashboard.php');
     exit;
 }
+
+$studentModel = new Student($conn);
+$publicStats = $studentModel->publicStats();
 
 $landingCssVersion = filemtime(__DIR__ . '/assets/css/landing.css');
 $techJsVersion = filemtime(__DIR__ . '/assets/js/tech-connection.js');
@@ -85,9 +90,9 @@ $landingJsVersion = filemtime(__DIR__ . '/assets/js/landing.js');
             <section id="stats" class="stats-panel" aria-labelledby="statsTitle">
                 <h2 id="statsTitle">สถิติที่น่าสนใจ</h2>
                 <div class="stats-grid">
-                    <article><svg viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5-9-5Zm3 3v5c3 2 9 2 12 0v-5"/></svg><span>นักศึกษาทั้งหมด</span><strong>1,245</strong><small>คน</small></article>
-                    <article><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2m7.5-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm11.5 10v-2a4 4 0 0 0-3-3.87M15 3.13a4 4 0 0 1 0 7.75"/></svg><span>สายรหัสทั้งหมด</span><strong>320</strong><small>สาย</small></article>
-                    <article><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>ความสัมพันธ์เชื่อมโยง</span><strong>3,892</strong><small>ความสัมพันธ์</small></article>
+                    <article><svg viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5-9-5Zm3 3v5c3 2 9 2 12 0v-5"/></svg><span>นักศึกษาทั้งหมด</span><strong><?php echo number_format($publicStats['total_students']); ?></strong><small>คน</small></article>
+                    <article><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2m7.5-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm11.5 10v-2a4 4 0 0 0-3-3.87M15 3.13a4 4 0 0 1 0 7.75"/></svg><span>สายรหัสทั้งหมด</span><strong><?php echo number_format($publicStats['total_lines']); ?></strong><small>สาย</small></article>
+                    <article><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>ความสัมพันธ์เชื่อมโยง</span><strong><?php echo number_format($publicStats['total_relationships']); ?></strong><small>ความสัมพันธ์</small></article>
                     <article><svg viewBox="0 0 24 24"><path d="M4 21V7l8-4 8 4v14M9 21v-5h6v5M8 10h1m6 0h1"/></svg><span>3 หลักสูตร</span><strong>100%</strong><small>ครอบคลุม</small></article>
                 </div>
             </section>

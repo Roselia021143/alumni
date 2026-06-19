@@ -988,6 +988,17 @@ body.student-tech-page::before {
     backdrop-filter: none !important;
 }
 
+.admin-tech-page .admin-content article.rounded-lg {
+    overflow: hidden;
+    border-radius: 22px !important;
+    background-clip: padding-box !important;
+}
+
+.admin-tech-page .admin-content article.rounded-lg > div[class*="h-"] {
+    overflow: hidden;
+    border-radius: 14px;
+}
+
 .admin-tech-page .admin-line-details-scroll {
     scrollbar-color: rgba(66, 245, 155, 0.55) rgba(255, 255, 255, 0.08);
 }

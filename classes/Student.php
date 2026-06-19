@@ -507,6 +507,110 @@ class Student
         ];
     }
 
+    public function publicStats()
+    {
+        $result = $this->conn->query(
+            'SELECT
+                COUNT(*) AS total_students,
+                SUM(CASE WHEN parent_student_id IS NULL THEN 1 ELSE 0 END) AS total_lines,
+                SUM(CASE WHEN parent_student_id IS NOT NULL THEN 1 ELSE 0 END) AS total_relationships
+             FROM students'
+        );
+        $stats = $result->fetch_assoc();
+
+        return [
+            'total_students' => (int) ($stats['total_students'] ?? 0),
+            'total_lines' => (int) ($stats['total_lines'] ?? 0),
+            'total_relationships' => (int) ($stats['total_relationships'] ?? 0),
+        ];
+    }
+
+    public function academicMajorStats($currentAcademicYear)
+    {
+        $majors = [
+            'computer_science' => [
+                'label' => 'วิทยาการคอมพิวเตอร์',
+                'keywords' => ['วิทยาการคอมพิวเตอร์'],
+            ],
+            'information_technology' => [
+                'label' => 'เทคโนโลยีสารสนเทศ',
+                'keywords' => ['เทคโนโลยีสารสนเทศ'],
+            ],
+            'multimedia' => [
+                'label' => 'เทคโนโลยีมัลติมีเดียและแอนิเมชัน',
+                'keywords' => ['มัลติมีเดีย', 'มัลติมิเดีย', 'แอนิเมชัน', 'แอนิเมชั่น'],
+            ],
+        ];
+
+        foreach ($majors as &$major) {
+            $major['total'] = 0;
+            $major['total_lines'] = 0;
+            $major['years'] = [1 => 0, 2 => 0, 3 => 0, 4 => 0];
+            $major['other_years'] = 0;
+        }
+        unset($major);
+
+        $result = $this->conn->query(
+            'SELECT major, generation, parent_student_id
+             FROM students
+             WHERE major IS NOT NULL AND major <> ""'
+        );
+        $currentGeneration = ((int) $currentAcademicYear) % 100;
+
+        while ($student = $result->fetch_assoc()) {
+            $majorKey = null;
+            $studentMajor = trim((string) $student['major']);
+
+            foreach ($majors as $key => $major) {
+                foreach ($major['keywords'] as $keyword) {
+                    if (mb_stripos($studentMajor, $keyword, 0, 'UTF-8') !== false) {
+                        $majorKey = $key;
+                        break 2;
+                    }
+                }
+            }
+
+            if ($majorKey === null) {
+                continue;
+            }
+
+            $majors[$majorKey]['total']++;
+
+            if ($student['parent_student_id'] === null) {
+                $majors[$majorKey]['total_lines']++;
+            }
+
+            $generation = ((int) $student['generation']) % 100;
+            $studyYear = $currentGeneration - $generation + 1;
+
+            if ($studyYear >= 1 && $studyYear <= 4) {
+                $majors[$majorKey]['years'][$studyYear]++;
+            } else {
+                $majors[$majorKey]['other_years']++;
+            }
+        }
+
+        foreach ($majors as &$major) {
+            $major['percentages'] = [];
+
+            foreach ($major['years'] as $year => $count) {
+                $major['percentages'][$year] = $major['total'] > 0
+                    ? round(($count / $major['total']) * 100, 1)
+                    : 0;
+            }
+
+            unset($major['keywords']);
+        }
+        unset($major);
+
+        return [
+            'majors' => $majors,
+            'total_students' => array_sum(array_column($majors, 'total')),
+            'total_lines' => array_sum(array_column($majors, 'total_lines')),
+            'current_academic_year' => (int) $currentAcademicYear,
+        ];
+    }
+
     public function create($data, $createUser = true)
     {
         $data = $this->normalize($data);
