@@ -107,14 +107,25 @@ class StudentUser
             return false;
         }
 
-        $stmt = $this->conn->prepare(
-            'SELECT su.id, su.student_id, su.username, su.password, su.must_change_password
-             FROM student_users su
-             INNER JOIN students s ON su.student_id = s.id
-             WHERE su.username = ?
-             LIMIT 1'
-        );
-        $stmt->bind_param('s', $username);
+        if ($this->hasEmailColumn()) {
+            $stmt = $this->conn->prepare(
+                'SELECT su.id, su.student_id, su.username, su.password, su.must_change_password
+                 FROM student_users su
+                 INNER JOIN students s ON su.student_id = s.id
+                 WHERE su.username = ? OR su.email = ?
+                 LIMIT 1'
+            );
+            $stmt->bind_param('ss', $username, $username);
+        } else {
+            $stmt = $this->conn->prepare(
+                'SELECT su.id, su.student_id, su.username, su.password, su.must_change_password
+                 FROM student_users su
+                 INNER JOIN students s ON su.student_id = s.id
+                 WHERE su.username = ?
+                 LIMIT 1'
+            );
+            $stmt->bind_param('s', $username);
+        }
         $stmt->execute();
         $studentUser = $stmt->get_result()->fetch_assoc();
         $stmt->close();

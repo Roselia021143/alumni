@@ -127,9 +127,13 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 .login-heading h2 { margin: 0; font-size: 23px; }
 .login-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 30px 0 22px; border-bottom: 1px solid rgba(255,255,255,.1); }
 .login-tabs > * { padding: 0 10px 12px; text-align: center; color: #dce5ee; font-size: 13px; }
+.login-tabs button { border: 0; background: transparent; cursor: pointer; }
 .login-tabs .active { margin-bottom: -1px; border-bottom: 2px solid var(--green); color: var(--green); font-weight: 600; }
-.login-tabs a:hover { color: var(--green); }
+.login-tabs button:hover { color: var(--green); }
 .login-panel form { display: grid; gap: 17px; }
+.login-panel form.auth-panel { display: none; }
+.login-panel form.auth-panel.is-active { display: grid; }
+.auth-message { margin-bottom: 17px; border: 1px solid rgba(255, 107, 138, .35); border-radius: 10px; background: rgba(255, 107, 138, .1); color: #ffb4c4; padding: 11px 13px; font-size: 12px; line-height: 1.55; }
 .input-wrap { position: relative; display: flex; align-items: center; min-height: 59px; border: 1px solid rgba(255,255,255,.09); border-radius: 11px; background: rgba(255,255,255,.04); color: #8796a8; }
 .input-wrap:focus-within { border-color: rgba(57,233,154,.55); box-shadow: 0 0 0 3px rgba(57,233,154,.08); }
 .input-wrap > svg { flex: 0 0 21px; width: 21px; height: 21px; margin-left: 18px; }
@@ -149,7 +153,8 @@ svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: 
 .register-note { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 26px; color: #8997a8; font-size: 12px; }
 .register-note span { height: 1px; background: rgba(255,255,255,.08); }
 .register-note p { margin: 0; }
-.register-note a { color: var(--green); font-weight: 600; }
+.register-note button { border: 0; background: transparent; color: var(--green); padding: 0; font-size: inherit; font-weight: 600; cursor: pointer; }
+.register-note button:hover { text-decoration: underline; }
 .admin-mobile-link { justify-content: center; margin-top: 24px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 21px; }
 .admin-mobile-link:hover { color: var(--green); }
 

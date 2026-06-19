@@ -4,6 +4,7 @@ require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/classes/Session.php';
 require_once __DIR__ . '/classes/Student.php';
+require_once __DIR__ . '/classes/StudentUser.php';
 
 Session::start();
 
@@ -18,6 +19,55 @@ if (Session::isStudentLoggedIn()) {
 }
 
 $studentModel = new Student($conn);
+$studentUserModel = new StudentUser($conn);
+$authMode = isset($_POST['auth_mode']) && $_POST['auth_mode'] === 'register' ? 'register' : 'login';
+$authError = null;
+$loginUsername = isset($_POST['username']) ? trim((string) $_POST['username']) : '';
+$registerStudentCode = isset($_POST['student_code']) ? trim((string) $_POST['student_code']) : '';
+$registerEmail = isset($_POST['email']) ? trim((string) $_POST['email']) : '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        if ($authMode === 'register') {
+            $password = isset($_POST['password']) ? (string) $_POST['password'] : '';
+            $confirmPassword = isset($_POST['confirm_password']) ? (string) $_POST['confirm_password'] : '';
+
+            if ($password === '' || $password !== $confirmPassword) {
+                throw new RuntimeException('กรุณายืนยันรหัสผ่านให้ตรงกัน');
+            }
+
+            if (strlen($password) < 6) {
+                throw new RuntimeException('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+            }
+
+            $studentModel->createRegistration($_POST, $password);
+            $studentUser = $studentUserModel->findByUsername($registerStudentCode);
+
+            if (!$studentUser) {
+                throw new RuntimeException('สมัครสำเร็จ แต่ไม่สามารถเข้าสู่ระบบอัตโนมัติได้');
+            }
+
+            Session::studentLogin($studentUser);
+            Session::flash('success', 'สมัครสมาชิกเรียบร้อยแล้ว กรุณากรอกข้อมูลส่วนตัวเพิ่มเติม');
+            header('Location: student/edit-profile.php');
+            exit;
+        }
+
+        $password = isset($_POST['password']) ? (string) $_POST['password'] : '';
+        $authenticatedUser = $studentUserModel->authenticate($loginUsername, $password);
+
+        if (!$authenticatedUser) {
+            throw new RuntimeException('รหัสนักศึกษา อีเมล หรือรหัสผ่านไม่ถูกต้อง');
+        }
+
+        Session::studentLogin($authenticatedUser);
+        header('Location: student/dashboard.php');
+        exit;
+    } catch (Exception $exception) {
+        $authError = $exception->getMessage();
+    }
+}
+
 $publicStats = $studentModel->publicStats();
 
 $landingCssVersion = filemtime(__DIR__ . '/assets/css/landing.css');
@@ -114,15 +164,20 @@ $landingJsVersion = filemtime(__DIR__ . '/assets/js/landing.js');
             </div>
 
             <div class="login-tabs" role="tablist" aria-label="การเข้าใช้งาน">
-                <span class="active" role="tab" aria-selected="true">เข้าสู่ระบบ</span>
-                <a href="student/register.php" role="tab" aria-selected="false">สมัครสมาชิก</a>
+                <button class="<?php echo $authMode === 'login' ? 'active' : ''; ?>" type="button" role="tab" aria-selected="<?php echo $authMode === 'login' ? 'true' : 'false'; ?>" data-auth-switch="login">เข้าสู่ระบบ</button>
+                <button class="<?php echo $authMode === 'register' ? 'active' : ''; ?>" type="button" role="tab" aria-selected="<?php echo $authMode === 'register' ? 'true' : 'false'; ?>" data-auth-switch="register">สมัครสมาชิก</button>
             </div>
 
-            <form action="student/login.php" method="post">
+            <?php if ($authError): ?>
+                <div class="auth-message" role="alert"><?php echo htmlspecialchars((string) $authError, ENT_QUOTES, 'UTF-8'); ?></div>
+            <?php endif; ?>
+
+            <form class="auth-panel <?php echo $authMode === 'login' ? 'is-active' : ''; ?>" data-auth-panel="login" action="index.php" method="post">
+                <input type="hidden" name="auth_mode" value="login">
                 <label class="input-wrap">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
                     <span class="sr-only">รหัสนักศึกษา หรืออีเมล</span>
-                    <input name="username" type="text" required autocomplete="username" placeholder="รหัสนักศึกษา / อีเมล">
+                    <input name="username" type="text" value="<?php echo htmlspecialchars($loginUsername, ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="username" placeholder="รหัสนักศึกษา / อีเมล">
                 </label>
                 <label class="input-wrap">
                     <svg viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5V11Z"/></svg>
@@ -139,7 +194,34 @@ $landingJsVersion = filemtime(__DIR__ . '/assets/js/landing.js');
                 <button class="submit-button" type="submit">เข้าสู่ระบบ</button>
             </form>
 
-            <div class="register-note"><span></span><p>ยังไม่มีบัญชี? <a href="student/register.php">สมัครสมาชิก</a></p><span></span></div>
+            <form class="auth-panel <?php echo $authMode === 'register' ? 'is-active' : ''; ?>" data-auth-panel="register" action="index.php" method="post">
+                <input type="hidden" name="auth_mode" value="register">
+                <label class="input-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
+                    <span class="sr-only">รหัสนักศึกษา</span>
+                    <input name="student_code" type="text" value="<?php echo htmlspecialchars($registerStudentCode, ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="username" placeholder="รหัสนักศึกษา">
+                </label>
+                <label class="input-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M3 5h18v14H3V5Zm0 1 9 7 9-7"/></svg>
+                    <span class="sr-only">อีเมล</span>
+                    <input name="email" type="email" value="<?php echo htmlspecialchars($registerEmail, ENT_QUOTES, 'UTF-8'); ?>" required autocomplete="email" placeholder="อีเมล">
+                </label>
+                <label class="input-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5V11Z"/></svg>
+                    <span class="sr-only">รหัสผ่าน</span>
+                    <input name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="รหัสผ่านอย่างน้อย 6 ตัวอักษร">
+                    <button class="password-toggle" type="button" aria-label="แสดงรหัสผ่าน" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg></button>
+                </label>
+                <label class="input-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5V11Z"/></svg>
+                    <span class="sr-only">ยืนยันรหัสผ่าน</span>
+                    <input name="confirm_password" type="password" required minlength="6" autocomplete="new-password" placeholder="ยืนยันรหัสผ่าน">
+                    <button class="password-toggle" type="button" aria-label="แสดงรหัสผ่าน" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg></button>
+                </label>
+                <button class="submit-button" type="submit">สมัครสมาชิก</button>
+            </form>
+
+            <div class="register-note"><span></span><p data-auth-note>ยังไม่มีบัญชี? <button type="button" data-auth-switch="register">สมัครสมาชิก</button></p><span></span></div>
             <a class="admin-mobile-link" href="admin/login.php"><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Z"/></svg>สำหรับแอดมิน เข้าสู่ระบบ</a>
         </aside>
     </main>
