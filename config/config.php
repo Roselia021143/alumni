@@ -1,7 +1,7 @@
 <?php
 
 define('APP_NAME', 'Alumni Code Line');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.0.1');
 define('APP_BASE_URL', 'http://localhost/alumni');
 
 define('DB_HOST', 'localhost');
