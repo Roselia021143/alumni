@@ -1,0 +1,341 @@
+.student-matrix-hero {
+    margin-bottom: 18px;
+}
+
+.student-matrix-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.student-matrix-summary article {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    background: rgba(12, 26, 46, 0.72);
+    padding: 16px;
+    text-align: center;
+    backdrop-filter: blur(18px);
+}
+
+.student-matrix-summary strong,
+.student-matrix-summary span {
+    display: block;
+}
+
+.student-matrix-summary strong {
+    color: var(--tc-green);
+    font-size: 27px;
+}
+
+.student-matrix-summary span {
+    margin-top: 2px;
+    color: var(--tc-muted);
+    font-size: 11px;
+}
+
+.student-tech-page main > section.student-lineage-map {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(117, 156, 188, 0.24) !important;
+    border-radius: 22px !important;
+    background: rgba(11, 29, 48, 0.86) !important;
+    padding: 0 !important;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3) !important;
+}
+
+.student-lineage-map .map-toolbar {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 11px;
+    background: rgba(4, 15, 27, 0.94);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.student-lineage-map .map-toolbar button,
+.student-lineage-map .map-toolbar output {
+    display: grid;
+    min-width: 42px;
+    height: 40px;
+    place-items: center;
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: var(--tc-text);
+}
+
+.student-lineage-map .map-toolbar button {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.student-lineage-map .map-toolbar button:hover {
+    background: rgba(66, 245, 155, 0.14);
+    color: var(--tc-green);
+}
+
+.student-lineage-map .map-toolbar output {
+    min-width: 58px;
+    color: var(--tc-muted);
+    font-size: 11px;
+}
+
+.student-lineage-map .map-toolbar .fit-button {
+    min-width: 76px;
+    border-right: 0;
+    padding: 0 11px;
+    font-size: 12px;
+}
+
+.student-lineage-map .lineage-viewport {
+    position: relative;
+    height: min(70vh, 760px);
+    min-height: 480px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    cursor: grab;
+    scrollbar-color: rgba(66, 245, 155, 0.38) transparent;
+    touch-action: none;
+    background:
+        linear-gradient(rgba(133, 169, 198, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(133, 169, 198, 0.07) 1px, transparent 1px),
+        radial-gradient(circle at 50% 20%, rgba(31, 91, 102, 0.23), transparent 38%);
+    background-size: 36px 36px, 36px 36px, auto;
+}
+
+.student-lineage-map .lineage-viewport.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.student-lineage-map .lineage-stage {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+.student-lineage-map .lineage-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: max-content;
+    transform-origin: 0 0;
+    padding: 90px 70px 100px;
+}
+
+.student-lineage-map .lineage-matrix {
+    position: relative;
+    display: grid;
+    grid-auto-rows: auto;
+    gap: 16px 24px;
+    width: max-content;
+    min-width: 100%;
+    padding: 0 6px 8px;
+}
+
+.student-lineage-map .matrix-connectors {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.student-lineage-map .matrix-connectors path {
+    fill: none;
+    stroke: rgba(66, 245, 155, 0.48);
+    stroke-width: 2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 5px rgba(66, 245, 155, 0.25));
+}
+
+.student-lineage-map .matrix-corner,
+.student-lineage-map .matrix-line-head {
+    position: relative;
+    z-index: 3;
+    min-height: 72px;
+    border: 1px solid rgba(117, 156, 188, 0.2);
+    border-radius: 12px;
+    background: rgba(5, 19, 33, 0.96);
+}
+
+.student-lineage-map .matrix-corner {
+    display: grid;
+    place-items: center;
+    color: var(--tc-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.student-lineage-map .matrix-line-head {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 10px 13px;
+    text-align: center;
+}
+
+.student-lineage-map .matrix-line-head.is-current {
+    border-color: rgba(255, 216, 87, 0.5);
+    box-shadow: 0 0 24px rgba(255, 216, 87, 0.08);
+}
+
+.student-lineage-map .matrix-line-head span {
+    color: var(--tc-green);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.student-lineage-map .matrix-line-head strong {
+    display: -webkit-box;
+    margin-top: 3px;
+    overflow: hidden;
+    color: var(--tc-text) !important;
+    font-size: 12px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.student-lineage-map .matrix-generation {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-height: 120px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid rgba(66, 245, 155, 0.25);
+    border-radius: 12px;
+    background: rgba(9, 30, 47, 0.94);
+}
+
+.student-lineage-map .matrix-generation small {
+    color: var(--tc-muted);
+    font-size: 10px;
+}
+
+.student-lineage-map .matrix-generation strong {
+    color: var(--tc-green);
+    font-size: 27px;
+}
+
+.student-lineage-map .matrix-cell {
+    position: relative;
+    display: flex;
+    min-height: 120px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    border: 1px solid rgba(117, 156, 188, 0.12);
+    border-radius: 14px;
+    background: rgba(7, 23, 39, 0.5);
+    padding: 17px 14px;
+}
+
+.student-lineage-map .matrix-cell.has-branches {
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.student-lineage-map .matrix-cell.is-empty {
+    background: rgba(7, 23, 39, 0.22);
+}
+
+.student-lineage-map .matrix-empty-mark {
+    color: rgba(159, 176, 195, 0.28);
+    font-size: 22px;
+}
+
+.student-lineage-map .lineage-node {
+    position: relative;
+    z-index: 3;
+    width: 210px;
+    min-height: 84px;
+    border: 1px solid rgba(102, 190, 173, 0.45);
+    border-top: 3px solid var(--tc-green);
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(18, 48, 70, 0.99), rgba(9, 27, 45, 0.99));
+    padding: 14px 16px;
+    text-align: center;
+    box-shadow: 0 11px 25px rgba(0, 0, 0, 0.24);
+}
+
+.student-lineage-map .matrix-cell.has-branches .lineage-node {
+    flex: 0 0 190px;
+    width: 190px;
+}
+
+.student-lineage-map .lineage-node.is-root {
+    border-color: rgba(255, 216, 87, 0.55);
+    border-top-color: var(--tc-yellow);
+}
+
+.student-lineage-map .lineage-node.is-self {
+    border-color: var(--tc-green);
+    background: linear-gradient(145deg, rgba(31, 82, 78, 0.99), rgba(9, 35, 49, 0.99));
+    box-shadow: 0 0 28px rgba(66, 245, 155, 0.16), 0 11px 25px rgba(0, 0, 0, 0.24);
+}
+
+.student-lineage-map .lineage-node h3 {
+    margin: 0;
+    color: var(--tc-text) !important;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.student-lineage-map .lineage-node p {
+    margin: 7px 0 0;
+    color: var(--tc-green);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.student-lineage-map .map-hint {
+    margin: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 16px;
+    color: var(--tc-muted);
+    font-size: 11px;
+    text-align: center;
+}
+
+@media (max-width: 700px) {
+    .student-matrix-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .student-lineage-map .lineage-viewport {
+        height: 65vh;
+        min-height: 430px;
+    }
+
+    .student-lineage-map .map-toolbar {
+        top: 9px;
+        right: 9px;
+    }
+
+    .student-lineage-map .lineage-canvas {
+        padding: 78px 40px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .student-lineage-map * {
+        scroll-behavior: auto !important;
+    }
+}

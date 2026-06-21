@@ -44,6 +44,24 @@ main { width: min(1500px, calc(100% - 40px)); margin: 0 auto; padding: 36px 0; }
 .lineage-viewport.is-dragging { cursor: grabbing; user-select: none; }
 .lineage-stage { position: relative; min-width: 100%; min-height: 100%; }
 .lineage-canvas { position: absolute; top: 0; left: 0; width: max-content; transform-origin: 0 0; padding: 90px 70px 100px; }
+.lineage-matrix { position: relative; display: grid; grid-auto-rows: auto; gap: 16px 24px; width: max-content; min-width: 100%; padding: 0 6px 8px; }
+.matrix-connectors { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.matrix-connectors path { fill: none; stroke: var(--connector); stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 5px rgba(66,231,160,.25)); }
+.matrix-corner, .matrix-line-head { position: relative; z-index: 3; min-height: 72px; border: 1px solid rgba(117,156,188,.2); border-radius: 12px; background: rgba(5,19,33,.94); }
+.matrix-corner { display: grid; place-items: center; color: var(--muted); font-size: 12px; font-weight: 700; }
+.matrix-line-head { display: flex; align-items: center; flex-direction: column; justify-content: center; padding: 10px 13px; text-align: center; }
+.matrix-line-head span { color: var(--green); font-size: 10px; font-weight: 700; }
+.matrix-line-head strong { display: -webkit-box; margin-top: 3px; overflow: hidden; font-size: 12px; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.matrix-generation { position: relative; z-index: 3; display: flex; min-height: 120px; align-items: center; flex-direction: column; justify-content: center; border: 1px solid rgba(66,231,160,.25); border-radius: 12px; background: rgba(9,30,47,.92); }
+.matrix-generation small { color: var(--muted); font-size: 10px; }
+.matrix-generation strong { color: var(--green); font-size: 27px; }
+.matrix-cell { position: relative; display: flex; min-height: 120px; align-items: center; flex-direction: column; justify-content: center; gap: 12px; border: 1px solid rgba(117,156,188,.12); border-radius: 14px; background: rgba(7,23,39,.5); padding: 17px 14px; }
+.matrix-cell.has-branches { align-items: center; flex-direction: row; flex-wrap: nowrap; }
+.matrix-cell.is-empty { background: rgba(7,23,39,.22); }
+.matrix-empty-mark { color: rgba(159,176,195,.28); font-size: 22px; }
+.matrix-cell .lineage-node { z-index: 3; }
+.matrix-cell.has-branches .lineage-node { flex: 0 0 190px; width: 190px; }
+.matrix-cell .lineage-node.is-root { border-color: rgba(255,216,87,.55); border-top-color: #ffd857; box-shadow: 0 0 24px rgba(255,216,87,.08), 0 11px 25px rgba(0,0,0,.24); }
 .lineage-forest, .lineage-forest ul { display: flex; justify-content: center; gap: 30px; margin: 0; padding: 42px 0 0; list-style: none; }
 .lineage-forest { gap: 70px; padding-top: 0; }
 .lineage-forest ul { position: relative; }

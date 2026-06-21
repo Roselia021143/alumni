@@ -3,10 +3,12 @@
     const stage = document.getElementById('lineageStage');
     const canvas = document.getElementById('lineageCanvas');
     const output = document.getElementById('zoomLevel');
+    const matrix = document.querySelector('.lineage-matrix');
+    const connectorLayer = document.querySelector('.matrix-connectors');
 
     if (!viewport || !stage || !canvas) return;
 
-    const minScale = 0.3;
+    const minScale = 0.15;
     const maxScale = 2;
     let scale = 1;
     let dragging = false;
@@ -20,6 +22,39 @@
 
     function dimensions() {
         return { width: canvas.scrollWidth, height: canvas.scrollHeight };
+    }
+
+    function drawConnectors() {
+        if (!matrix || !connectorLayer) return;
+
+        const matrixRect = matrix.getBoundingClientRect();
+        const safeScale = scale || 1;
+        const nodes = Array.from(matrix.querySelectorAll('[data-node-id]'));
+        const nodeMap = new Map(nodes.map(function (node) {
+            return [node.dataset.nodeId, node];
+        }));
+
+        connectorLayer.innerHTML = '';
+        connectorLayer.setAttribute('viewBox', '0 0 ' + matrix.scrollWidth + ' ' + matrix.scrollHeight);
+        connectorLayer.setAttribute('width', matrix.scrollWidth);
+        connectorLayer.setAttribute('height', matrix.scrollHeight);
+
+        nodes.forEach(function (node) {
+            const parent = nodeMap.get(node.dataset.parentId);
+            if (!parent) return;
+
+            const parentRect = parent.getBoundingClientRect();
+            const nodeRect = node.getBoundingClientRect();
+            const startX = (parentRect.left - matrixRect.left + parentRect.width / 2) / safeScale;
+            const startY = (parentRect.bottom - matrixRect.top) / safeScale;
+            const endX = (nodeRect.left - matrixRect.left + nodeRect.width / 2) / safeScale;
+            const endY = (nodeRect.top - matrixRect.top) / safeScale;
+            const middleY = startY + Math.max(18, (endY - startY) / 2);
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+            path.setAttribute('d', 'M ' + startX + ' ' + startY + ' V ' + middleY + ' H ' + endX + ' V ' + endY);
+            connectorLayer.appendChild(path);
+        });
     }
 
     function applyScale(nextScale, focusX, focusY) {
@@ -114,7 +149,16 @@
     viewport.addEventListener('pointerup', release);
     viewport.addEventListener('pointercancel', release);
     viewport.addEventListener('dblclick', fit);
-    window.addEventListener('resize', fit);
-    window.addEventListener('load', fit);
-    requestAnimationFrame(fit);
+    window.addEventListener('resize', function () {
+        drawConnectors();
+        fit();
+    });
+    window.addEventListener('load', function () {
+        drawConnectors();
+        fit();
+    });
+    requestAnimationFrame(function () {
+        drawConnectors();
+        fit();
+    });
 }());

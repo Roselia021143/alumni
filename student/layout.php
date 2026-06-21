@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../classes/ViewHelper.php';
 
-function renderStudentLayout($title, $content)
+function renderStudentLayout($title, $content, $extraHead = '', $extraScripts = '')
 {
     $cssVersion = filemtime(__DIR__ . '/../assets/css/style.css');
     $techCssVersion = filemtime(__DIR__ . '/../assets/css/tech-connection.css');
@@ -21,6 +21,7 @@ function renderStudentLayout($title, $content)
         <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="../assets/css/style.css?v=<?php echo h($cssVersion); ?>">
         <link rel="stylesheet" href="../assets/css/tech-connection.css?v=<?php echo h($techCssVersion); ?>">
+        <?php echo $extraHead; ?>
     </head>
     <body class="student-tech-page min-h-screen bg-slate-100 text-slate-900">
         <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
@@ -44,6 +45,7 @@ function renderStudentLayout($title, $content)
         <main class="mx-auto max-w-7xl px-4 py-8">
             <?php echo $content; ?>
         </main>
+        <?php echo $extraScripts; ?>
         <script src="../assets/js/tech-connection.js?v=<?php echo h($techJsVersion); ?>"></script>
     </body>
     </html>

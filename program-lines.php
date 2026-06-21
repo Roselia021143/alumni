@@ -44,7 +44,7 @@ function programStudentName($student)
     return $nickname === '' ? $name : $name . ' (' . $nickname . ')';
 }
 
-function renderProgramBranch($student, $childrenByParent, $visited = [])
+function collectProgramLineMembers($student, $childrenByParent, &$members, &$visited)
 {
     $studentId = (int) $student['id'];
 
@@ -53,22 +53,68 @@ function renderProgramBranch($student, $childrenByParent, $visited = [])
     }
 
     $visited[$studentId] = true;
+    $members[] = $student;
     $children = isset($childrenByParent[$studentId]) ? $childrenByParent[$studentId] : [];
-    ?>
-    <li>
-        <article class="lineage-node">
-            <h3><?php echo h(programStudentName($student)); ?></h3>
-            <p>ปีการศึกษา <?php echo h($student['generation']); ?></p>
-        </article>
-        <?php if (!empty($children)): ?>
-            <ul>
-                <?php foreach ($children as $child): ?>
-                    <?php renderProgramBranch($child, $childrenByParent, $visited); ?>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-    </li>
-    <?php
+
+    foreach ($children as $child) {
+        collectProgramLineMembers($child, $childrenByParent, $members, $visited);
+    }
+}
+
+$programLines = [];
+$generationMap = [];
+
+foreach ($forest['roots'] as $rootIndex => $root) {
+    $members = [];
+    $visited = [];
+    collectProgramLineMembers($root, $forest['children_by_parent'], $members, $visited);
+    $membersByGeneration = [];
+
+    foreach ($members as $member) {
+        $generation = trim((string) $member['generation']);
+        $generation = $generation === '' ? 'ไม่ระบุ' : $generation;
+        $generationMap[$generation] = true;
+
+        if (!isset($membersByGeneration[$generation])) {
+            $membersByGeneration[$generation] = [];
+        }
+
+        $membersByGeneration[$generation][] = $member;
+    }
+
+    $largestGenerationGroup = 1;
+    foreach ($membersByGeneration as $generationMembers) {
+        $largestGenerationGroup = max($largestGenerationGroup, count($generationMembers));
+    }
+
+    $columnWidth = $largestGenerationGroup > 1
+        ? max(240, ($largestGenerationGroup * 190) + (($largestGenerationGroup - 1) * 12) + 28)
+        : 240;
+
+    $programLines[] = [
+        'number' => $rootIndex + 1,
+        'root' => $root,
+        'members_by_generation' => $membersByGeneration,
+        'column_width' => $columnWidth,
+    ];
+}
+
+$generations = array_keys($generationMap);
+usort($generations, function ($left, $right) {
+    if ($left === 'ไม่ระบุ') {
+        return 1;
+    }
+
+    if ($right === 'ไม่ระบุ') {
+        return -1;
+    }
+
+    return (int) $left <=> (int) $right;
+});
+
+$matrixColumns = ['110px'];
+foreach ($programLines as $line) {
+    $matrixColumns[] = (int) $line['column_width'] . 'px';
 }
 ?>
 <!DOCTYPE html>
@@ -123,11 +169,44 @@ function renderProgramBranch($student, $childrenByParent, $visited = [])
                                 <span>เมื่อมีการเพิ่มข้อมูลในหลักสูตร แผนผังจะแสดงที่นี่โดยอัตโนมัติ</span>
                             </div>
                         <?php else: ?>
-                            <ul class="lineage-forest">
-                                <?php foreach ($forest['roots'] as $root): ?>
-                                    <?php renderProgramBranch($root, $forest['children_by_parent']); ?>
+                            <div class="lineage-matrix" style="grid-template-columns: <?php echo h(implode(' ', $matrixColumns)); ?>;">
+                                <svg class="matrix-connectors" aria-hidden="true"></svg>
+
+                                <div class="matrix-corner">ปีการศึกษา</div>
+                                <?php foreach ($programLines as $line): ?>
+                                    <div class="matrix-line-head">
+                                        <span>สายที่ <?php echo (int) $line['number']; ?></span>
+                                        <strong><?php echo h(programStudentName($line['root'])); ?></strong>
+                                    </div>
                                 <?php endforeach; ?>
-                            </ul>
+
+                                <?php foreach ($generations as $generation): ?>
+                                    <div class="matrix-generation">
+                                        <small>รุ่น</small>
+                                        <strong><?php echo h($generation); ?></strong>
+                                    </div>
+
+                                    <?php foreach ($programLines as $line): ?>
+                                        <?php $members = isset($line['members_by_generation'][$generation]) ? $line['members_by_generation'][$generation] : []; ?>
+                                        <div class="matrix-cell <?php echo empty($members) ? 'is-empty' : ''; ?> <?php echo count($members) > 1 ? 'has-branches' : ''; ?>">
+                                            <?php if (empty($members)): ?>
+                                                <span class="matrix-empty-mark">—</span>
+                                            <?php else: ?>
+                                                <?php foreach ($members as $member): ?>
+                                                    <article
+                                                        class="lineage-node <?php echo (int) $member['id'] === (int) $line['root']['id'] ? 'is-root' : ''; ?>"
+                                                        data-node-id="<?php echo (int) $member['id']; ?>"
+                                                        <?php if ($member['parent_student_id'] !== null): ?>data-parent-id="<?php echo (int) $member['parent_student_id']; ?>"<?php endif; ?>
+                                                    >
+                                                        <h3><?php echo h(programStudentName($member)); ?></h3>
+                                                        <p>ปีการศึกษา <?php echo h($generation); ?></p>
+                                                    </article>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>

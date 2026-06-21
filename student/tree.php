@@ -7,217 +7,213 @@ require_once __DIR__ . '/../classes/Student.php';
 
 $studentModel = new Student($conn);
 $studentId = Session::studentId();
-$showAll = isset($_GET['all']) && $_GET['all'] === '1';
-$tree = $studentModel->getTree($studentId, $showAll ? null : 2, $showAll ? null : 2);
+$student = $studentModel->find($studentId);
+$showAll = isset($_GET['all']);
 
-if (!$tree) {
+if (!$student) {
     header('Location: profile.php');
     exit;
 }
 
-function treeStudentName($student)
+function studentTreeName($student)
 {
     $name = trim((string) $student['first_name'] . ' ' . (string) $student['last_name']);
+    $nickname = trim((string) $student['nickname']);
 
-    if (!empty($student['nickname'])) {
-        $name .= ' (' . $student['nickname'] . ')';
-    }
-
-    return $name;
+    return $nickname === '' ? $name : $name . ' (' . $nickname . ')';
 }
 
-function flattenTreeDescendants($parentId, $childrenByParent, &$items = [])
+function collectStudentTreeMembers($student, $childrenByParent, &$members, &$visited)
 {
-    if (!isset($childrenByParent[$parentId])) {
-        return $items;
+    $studentId = (int) $student['id'];
+
+    if (isset($visited[$studentId])) {
+        return;
     }
 
-    foreach ($childrenByParent[$parentId] as $child) {
-        $items[] = $child;
-        flattenTreeDescendants((int) $child['id'], $childrenByParent, $items);
-    }
+    $visited[$studentId] = true;
+    $members[] = $student;
+    $children = isset($childrenByParent[$studentId]) ? $childrenByParent[$studentId] : [];
 
-    return $items;
+    foreach ($children as $child) {
+        collectStudentTreeMembers($child, $childrenByParent, $members, $visited);
+    }
 }
 
-function groupStudentsByLineLevel($students)
-{
-    $groups = [];
+$major = trim((string) $student['major']);
 
-    foreach ($students as $student) {
-        $level = isset($student['line_level']) ? (int) $student['line_level'] : 0;
+if ($major === '') {
+    $forest = [
+        'roots' => [$student],
+        'children_by_parent' => [],
+        'total_students' => 1,
+        'total_lines' => 1,
+    ];
+} else {
+    $forest = $studentModel->publicProgramForest([$major]);
+}
 
-        if (!isset($groups[$level])) {
-            $groups[$level] = [];
+$allProgramLines = [];
+
+foreach ($forest['roots'] as $root) {
+    $members = [];
+    $visited = [];
+    collectStudentTreeMembers($root, $forest['children_by_parent'], $members, $visited);
+    $containsCurrentStudent = false;
+
+    foreach ($members as $member) {
+        if ((int) $member['id'] === (int) $studentId) {
+            $containsCurrentStudent = true;
+            break;
+        }
+    }
+
+    $allProgramLines[] = [
+        'root' => $root,
+        'members' => $members,
+        'is_current' => $containsCurrentStudent,
+    ];
+}
+
+$visibleLines = $showAll
+    ? $allProgramLines
+    : array_values(array_filter($allProgramLines, function ($line) {
+        return $line['is_current'];
+    }));
+
+if (empty($visibleLines)) {
+    $visibleLines[] = [
+        'root' => $student,
+        'members' => [$student],
+        'is_current' => true,
+    ];
+}
+
+$generationMap = [];
+$programLines = [];
+$visibleStudentCount = 0;
+
+foreach ($visibleLines as $lineIndex => $line) {
+    $membersByGeneration = [];
+
+    foreach ($line['members'] as $member) {
+        $generation = trim((string) $member['generation']);
+        $generation = $generation === '' ? 'ไม่ระบุ' : $generation;
+        $generationMap[$generation] = true;
+
+        if (!isset($membersByGeneration[$generation])) {
+            $membersByGeneration[$generation] = [];
         }
 
-        $groups[$level][] = $student;
+        $membersByGeneration[$generation][] = $member;
+        $visibleStudentCount++;
     }
 
-    ksort($groups);
-    return $groups;
-}
-
-function protectTreeStudentPhoto($student, $isSelf = false)
-{
-    if (!$isSelf && isset($student['profile_image_visible']) && (int) $student['profile_image_visible'] === 0) {
-        $student['profile_image'] = '';
+    $largestGenerationGroup = 1;
+    foreach ($membersByGeneration as $generationMembers) {
+        $largestGenerationGroup = max($largestGenerationGroup, count($generationMembers));
     }
 
-    return $student;
-}
-
-function treeVisibleValue($student, $field, $label, $alwaysVisible = false)
-{
-    $value = isset($student[$field]) ? trim((string) $student[$field]) : '';
-    $visibleField = $field . '_visible';
-
-    if (!$alwaysVisible && (!array_key_exists($visibleField, $student) || (int) $student[$visibleField] === 0)) {
-        $value = 'ไม่เปิดเผย';
-    } elseif ($value === '') {
-        $value = 'ยังไม่ระบุ';
-    }
-
-    return [
-        'label' => $label,
-        'value' => $value,
+    $programLines[] = [
+        'number' => $lineIndex + 1,
+        'root' => $line['root'],
+        'members_by_generation' => $membersByGeneration,
+        'is_current' => $line['is_current'],
+        'column_width' => $largestGenerationGroup > 1
+            ? max(240, ($largestGenerationGroup * 190) + (($largestGenerationGroup - 1) * 12) + 28)
+            : 240,
     ];
 }
 
-function renderTreeCard($student, $label, $variant = '')
-{
-    $isSelf = $variant === 'self';
-    $student = protectTreeStudentPhoto($student, $isSelf);
-    $className = trim('tree-board-card ' . ($isSelf ? 'tree-board-card-self' : ''));
-    $details = [
-        treeVisibleValue($student, 'student_code', 'รหัสนักศึกษา'),
-        treeVisibleValue($student, 'generation', 'ปีการศึกษา'),
-        treeVisibleValue($student, 'faculty', 'คณะ', true),
-        treeVisibleValue($student, 'major', 'สาขา', true),
-        treeVisibleValue($student, 'phone', 'เบอร์โทร'),
-        treeVisibleValue($student, 'email', 'Email'),
-        treeVisibleValue($student, 'facebook', 'Facebook'),
-        treeVisibleValue($student, 'instagram', 'Instagram'),
-        treeVisibleValue($student, 'line_id_contact', 'Line ID'),
-    ];
-    ?>
-    <article class="<?php echo h($className); ?>" tabindex="0" aria-label="<?php echo h($label . ' ' . treeStudentName($student)); ?>">
-        <div class="tree-board-card-inner">
-            <div class="tree-board-card-face tree-board-card-front">
-                <div class="tree-board-photo">
-                    <?php echo renderStudentAvatar($student, $isSelf ? 'h-20 w-20' : 'h-14 w-14'); ?>
-                </div>
-                <div class="tree-board-card-content">
-                    <span class="tree-board-badge"><?php echo h($label); ?></span>
-                    <h3><?php echo h(treeStudentName($student)); ?></h3>
-                    <p>ปีการศึกษา <?php echo h($student['generation']); ?></p>
-                </div>
-            </div>
-            <div class="tree-board-card-face tree-board-card-back">
-                <div class="tree-board-card-content">
-                    <span class="tree-board-badge">ข้อมูลที่เปิดเผย</span>
-                    <h3><?php echo h(treeStudentName($student)); ?></h3>
-                    <dl class="tree-board-detail-list">
-                        <?php foreach ($details as $detail): ?>
-                            <div>
-                                <dt><?php echo h($detail['label']); ?></dt>
-                                <dd><?php echo h($detail['value']); ?></dd>
-                            </div>
-                        <?php endforeach; ?>
-                    </dl>
-                </div>
-            </div>
-        </div>
-    </article>
-    <?php
+$generations = array_keys($generationMap);
+usort($generations, function ($left, $right) {
+    if ($left === 'ไม่ระบุ') return 1;
+    if ($right === 'ไม่ระบุ') return -1;
+    return (int) $left <=> (int) $right;
+});
+
+$matrixColumns = ['110px'];
+foreach ($programLines as $line) {
+    $matrixColumns[] = (int) $line['column_width'] . 'px';
 }
 
-$ancestors = $tree['ancestors'];
-$descendants = flattenTreeDescendants((int) $tree['root']['id'], $tree['children_by_parent']);
-$descendantGroups = groupStudentsByLineLevel($descendants);
-$viewText = $showAll ? 'แสดงสายรหัสทั้งหมด' : 'แสดงรุ่นพี่ 2 รุ่น ตัวคุณ และรุ่นน้อง 2 รุ่น';
+$treeCssVersion = filemtime(__DIR__ . '/../assets/css/student-tree-matrix.css');
+$treeJsVersion = filemtime(__DIR__ . '/../assets/js/program-lines.js');
 
 ob_start();
 ?>
-<section class="tree-board-hero">
+<section class="tree-board-hero student-matrix-hero">
     <div>
-        <p>Alumni Lineage Board</p>
+        <p><?php echo $major === '' ? 'ยังไม่ได้ระบุสาขา' : h($major); ?></p>
         <h2>แผนผังสายรหัส</h2>
-        <span><?php echo h($viewText); ?></span>
+        <span><?php echo $showAll ? 'แสดงทุกสายในสาขาของคุณ' : 'แสดงเฉพาะต้นสายที่คุณเป็นสมาชิก'; ?></span>
     </div>
     <div class="tree-board-actions">
-        <a href="tree.php" class="<?php echo $showAll ? '' : 'active'; ?>">มุมมองย่อ</a>
-        <a href="tree.php?all=1" class="<?php echo $showAll ? 'active' : ''; ?>">ดูทั้งหมด</a>
+        <a href="tree.php" class="<?php echo $showAll ? '' : 'active'; ?>">สายของฉัน</a>
+        <a href="tree.php?all=1" class="<?php echo $showAll ? 'active' : ''; ?>">ทุกสายในสาขา</a>
     </div>
 </section>
 
-<section class="tree-board-stats" aria-label="สรุปสายรหัส">
-    <article>
-        <strong><?php echo h(count($ancestors)); ?></strong>
-        <span>รุ่นพี่ที่แสดง</span>
-    </article>
-    <article class="is-current">
-        <strong>1</strong>
-        <span>ตัวคุณ</span>
-    </article>
-    <article>
-        <strong><?php echo h(count($descendants)); ?></strong>
-        <span>รุ่นน้องที่แสดง</span>
-    </article>
+<section class="student-matrix-summary" aria-label="สรุปแผนผัง">
+    <article><strong><?php echo h(count($programLines)); ?></strong><span>สายรหัสที่แสดง</span></article>
+    <article><strong><?php echo h($visibleStudentCount); ?></strong><span>สมาชิกที่แสดง</span></article>
+    <article><strong><?php echo h(count($generations)); ?></strong><span>ปีการศึกษา</span></article>
 </section>
 
-<section class="tree-board-shell">
-    <div class="tree-board-section">
-        <div class="tree-board-section-head">
-            <span>ขึ้นไป</span>
-            <h3>รุ่นพี่รหัส</h3>
-        </div>
-
-        <?php if (empty($ancestors)): ?>
-            <p class="tree-board-empty">ยังไม่มีข้อมูลพี่รหัสในระบบ</p>
-        <?php else: ?>
-            <div class="tree-board-stack tree-board-stack-ancestors">
-                <?php foreach ($ancestors as $ancestor): ?>
-                    <?php renderTreeCard($ancestor, 'พี่รหัสชั้นที่ ' . (int) $ancestor['line_level']); ?>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+<section class="student-lineage-map" aria-label="แผนผังสายรหัสแบบซูมและลากได้">
+    <div class="map-toolbar" aria-label="เครื่องมือแผนผัง">
+        <button type="button" data-zoom="out" title="ซูมออก" aria-label="ซูมออก">−</button>
+        <output id="zoomLevel">100%</output>
+        <button type="button" data-zoom="in" title="ซูมเข้า" aria-label="ซูมเข้า">+</button>
+        <button class="fit-button" type="button" data-zoom="fit">พอดีจอ</button>
     </div>
 
-    <div class="tree-board-current">
-        <div class="tree-board-current-line"></div>
-        <?php renderTreeCard($tree['root'], 'ตัวคุณ', 'self'); ?>
-        <div class="tree-board-current-line"></div>
-    </div>
+    <div id="lineageViewport" class="lineage-viewport" tabindex="0">
+        <div id="lineageStage" class="lineage-stage">
+            <div id="lineageCanvas" class="lineage-canvas">
+                <div class="lineage-matrix" style="grid-template-columns: <?php echo h(implode(' ', $matrixColumns)); ?>;">
+                    <svg class="matrix-connectors" aria-hidden="true"></svg>
+                    <div class="matrix-corner">ปีการศึกษา</div>
 
-    <div class="tree-board-section">
-        <div class="tree-board-section-head">
-            <span>ลงไป</span>
-            <h3>รุ่นน้องรหัส</h3>
-        </div>
-
-        <?php if (empty($descendantGroups)): ?>
-            <p class="tree-board-empty">ยังไม่มีข้อมูลน้องรหัสในระบบ</p>
-        <?php else: ?>
-            <div class="tree-board-generations">
-                <?php foreach ($descendantGroups as $level => $students): ?>
-                    <div class="tree-board-generation">
-                        <div class="tree-board-generation-head">
-                            <span>ชั้นที่ <?php echo h($level); ?></span>
-                            <strong><?php echo h(count($students)); ?> คน</strong>
+                    <?php foreach ($programLines as $line): ?>
+                        <div class="matrix-line-head <?php echo $line['is_current'] ? 'is-current' : ''; ?>">
+                            <span><?php echo $line['is_current'] ? 'สายของฉัน' : 'สายที่ ' . (int) $line['number']; ?></span>
+                            <strong><?php echo h(studentTreeName($line['root'])); ?></strong>
                         </div>
-                        <div class="tree-board-grid">
-                            <?php foreach ($students as $student): ?>
-                                <?php renderTreeCard($student, 'น้องรหัสชั้นที่ ' . (int) $student['line_level']); ?>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+
+                    <?php foreach ($generations as $generation): ?>
+                        <div class="matrix-generation"><small>รุ่น</small><strong><?php echo h($generation); ?></strong></div>
+
+                        <?php foreach ($programLines as $line): ?>
+                            <?php $members = isset($line['members_by_generation'][$generation]) ? $line['members_by_generation'][$generation] : []; ?>
+                            <div class="matrix-cell <?php echo empty($members) ? 'is-empty' : ''; ?> <?php echo count($members) > 1 ? 'has-branches' : ''; ?>">
+                                <?php if (empty($members)): ?>
+                                    <span class="matrix-empty-mark">—</span>
+                                <?php else: ?>
+                                    <?php foreach ($members as $member): ?>
+                                        <article
+                                            class="lineage-node <?php echo (int) $member['id'] === (int) $studentId ? 'is-self' : ''; ?> <?php echo (int) $member['id'] === (int) $line['root']['id'] ? 'is-root' : ''; ?>"
+                                            data-node-id="<?php echo (int) $member['id']; ?>"
+                                            <?php if ($member['parent_student_id'] !== null): ?>data-parent-id="<?php echo (int) $member['parent_student_id']; ?>"<?php endif; ?>
+                                        >
+                                            <h3><?php echo h(studentTreeName($member)); ?></h3>
+                                            <p><?php echo (int) $member['id'] === (int) $studentId ? 'คุณ · ' : ''; ?>ปีการศึกษา <?php echo h($generation); ?></p>
+                                        </article>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
+    <p class="map-hint">ลากเพื่อเลื่อนดู · หมุนล้อเมาส์หรือกางสองนิ้วเพื่อซูม · ดับเบิลคลิกเพื่อพอดีจอ</p>
 </section>
 <?php
 $content = ob_get_clean();
+$extraHead = '<link rel="stylesheet" href="../assets/css/student-tree-matrix.css?v=' . h($treeCssVersion) . '">';
+$extraScripts = '<script src="../assets/js/program-lines.js?v=' . h($treeJsVersion) . '"></script>';
 
-renderStudentLayout('แผนผังสายรหัส', $content);
+renderStudentLayout('แผนผังสายรหัส', $content, $extraHead, $extraScripts);
