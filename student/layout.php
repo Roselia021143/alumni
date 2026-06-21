@@ -7,6 +7,7 @@ function renderStudentLayout($title, $content, $extraHead = '', $extraScripts = 
     $cssVersion = filemtime(__DIR__ . '/../assets/css/style.css');
     $techCssVersion = filemtime(__DIR__ . '/../assets/css/tech-connection.css');
     $techJsVersion = filemtime(__DIR__ . '/../assets/js/tech-connection.js');
+    $studentNavJsVersion = filemtime(__DIR__ . '/../assets/js/student-nav.js');
     ?>
     <!DOCTYPE html>
     <html lang="th">
@@ -27,12 +28,15 @@ function renderStudentLayout($title, $content, $extraHead = '', $extraScripts = 
         <canvas id="tcParticleCanvas" aria-hidden="true"></canvas>
 
         <header class="border-b border-slate-200 bg-white">
-            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+            <div class="student-header-row mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-widest text-teal-700">CIT Code Line</p>
                     <h1 class="text-xl font-bold"><?php echo h($title); ?></h1>
                 </div>
-                <nav class="flex flex-wrap items-center gap-2">
+                <button class="student-menu-toggle" type="button" aria-expanded="false" aria-controls="studentNavigation" aria-label="เปิดเมนู">
+                    <span></span><span></span><span></span>
+                </button>
+                <nav id="studentNavigation" class="student-nav flex flex-wrap items-center gap-2" aria-label="เมนูนักศึกษา">
                     <a href="profile.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">โปรไฟล์ของฉัน</a>
                     <a href="tree.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">สายรหัส</a>
                     <a href="line-manage.php" class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">ผูกสายรหัส</a>
@@ -46,6 +50,7 @@ function renderStudentLayout($title, $content, $extraHead = '', $extraScripts = 
             <?php echo $content; ?>
         </main>
         <?php echo $extraScripts; ?>
+        <script src="../assets/js/student-nav.js?v=<?php echo h($studentNavJsVersion); ?>"></script>
         <script src="../assets/js/tech-connection.js?v=<?php echo h($techJsVersion); ?>"></script>
     </body>
     </html>
