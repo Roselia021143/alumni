@@ -525,26 +525,43 @@ class Student
         ];
     }
 
-    public function publicProgramForest(array $keywords)
+    public function publicProgramForest(array $keywords, $exactMajor = null, array $allowedPrivateIds = null)
     {
         $emailVisibleCol = $this->hasEmailVisibleColumn() ? ', s.email_visible' : '';
-        $result = $this->conn->query(
-            'SELECT s.id, s.first_name, s.last_name, s.nickname, s.generation, s.major, s.faculty,
+        $sql = 'SELECT s.id, s.first_name, s.last_name, s.nickname, s.generation, s.major, s.faculty,
                     s.parent_student_id, s.student_code, s.phone, s.facebook, s.instagram,
-                    s.line_id_contact, s.headline,
+                    s.line_id_contact, s.headline, s.generation_visible, s.profile_visibility,
                     s.student_code_visible, s.phone_visible, s.facebook_visible,
                     s.instagram_visible, s.line_id_contact_visible' . $emailVisibleCol . ',
                     su.email
              FROM students s
              LEFT JOIN student_users su ON su.student_id = s.id
-             WHERE s.major IS NOT NULL AND s.major <> ""
-             ORDER BY s.generation ASC, s.student_code ASC'
-        );
+             WHERE s.major IS NOT NULL AND s.major <> ""';
+
+        if ($exactMajor !== null) {
+            $sql .= ' AND s.major = ?';
+        }
+
+        $sql .= ' ORDER BY s.generation ASC, s.student_code ASC';
+
+        if ($exactMajor !== null) {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bind_param('s', $exactMajor);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $stmt = null;
+            $result = $this->conn->query($sql);
+        }
+
         $students = [];
+        $allowedPrivateLookup = $allowedPrivateIds === null
+            ? null
+            : array_fill_keys(array_map('intval', $allowedPrivateIds), true);
 
         while ($student = $result->fetch_assoc()) {
             $major = trim((string) $student['major']);
-            $matches = false;
+            $matches = $exactMajor !== null;
 
             foreach ($keywords as $keyword) {
                 if ($keyword !== '' && mb_stripos($major, $keyword, 0, 'UTF-8') !== false) {
@@ -553,13 +570,21 @@ class Student
                 }
             }
 
-            if ($matches) {
+            $studentId = (int) $student['id'];
+            $isPrivate = isset($student['profile_visibility']) && $student['profile_visibility'] === 'private';
+            $canSeePrivate = $allowedPrivateLookup === null || isset($allowedPrivateLookup[$studentId]);
+
+            if ($matches && (!$isPrivate || $canSeePrivate)) {
                 $student['id'] = (int) $student['id'];
                 $student['parent_student_id'] = $student['parent_student_id'] === null
                     ? null
                     : (int) $student['parent_student_id'];
                 $students[$student['id']] = $student;
             }
+        }
+
+        if ($stmt) {
+            $stmt->close();
         }
 
         $roots = [];

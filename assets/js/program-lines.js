@@ -112,6 +112,10 @@
     }, { passive: false });
 
     viewport.addEventListener('pointerdown', function (event) {
+        if (event.target.closest('a, button, input, select, textarea')) {
+            return;
+        }
+
         pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
         viewport.setPointerCapture(event.pointerId);
 

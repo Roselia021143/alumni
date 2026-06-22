@@ -21,9 +21,12 @@ $isOwner = $ownerStudentId === $targetStudentId;
 $profileVisibility = isset($student['profile_visibility']) ? $student['profile_visibility'] : 'members';
 
 if (!$isOwner && $profileVisibility === 'private') {
-    Session::flash('error', 'โปรไฟล์นี้ตั้งค่าเป็นส่วนตัว');
-    header('Location: profile.php');
-    exit;
+    $isInLineage = $studentModel->isInLineage($ownerStudentId, $targetStudentId);
+    if (!$isInLineage) {
+        Session::flash('error', 'โปรไฟล์นี้ตั้งค่าเป็นส่วนตัว');
+        header('Location: profile.php');
+        exit;
+    }
 }
 
 $portfolio = $profileModel->getPortfolio($targetStudentId);

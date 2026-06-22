@@ -8,7 +8,7 @@ require_once __DIR__ . '/../classes/Student.php';
 $studentModel = new Student($conn);
 $studentId = Session::studentId();
 $student = $studentModel->find($studentId);
-$showAll = isset($_GET['all']);
+$showAll = isset($_GET['all']) && $_GET['all'] === '1';
 
 if (!$student) {
     header('Location: profile.php');
@@ -150,7 +150,15 @@ if ($major === '') {
         'total_lines' => 1,
     ];
 } else {
-    $forest = $studentModel->publicProgramForest([$major]);
+    $visiblePrivateStudentIds = [(int) $studentId];
+
+    if ($currentLineage) {
+        foreach (array_merge($currentLineage['ancestors'], $currentLineage['descendants']) as $relative) {
+            $visiblePrivateStudentIds[] = (int) $relative['id'];
+        }
+    }
+
+    $forest = $studentModel->publicProgramForest([$major], $major, $visiblePrivateStudentIds);
 }
 
 $allProgramLines = [];
@@ -197,7 +205,9 @@ foreach ($visibleLines as $lineIndex => $line) {
     $membersByGeneration = [];
 
     foreach ($line['members'] as $member) {
-        $generation = trim((string) $member['generation']);
+        $isSelf = (int) $member['id'] === (int) $studentId;
+        $canShowGeneration = $isSelf || !empty($member['generation_visible']);
+        $generation = $canShowGeneration ? trim((string) $member['generation']) : 'ไม่เปิดเผย';
         $generation = $generation === '' ? 'ไม่ระบุ' : $generation;
         $generationMap[$generation] = true;
 
@@ -227,8 +237,13 @@ foreach ($visibleLines as $lineIndex => $line) {
 
 $generations = array_keys($generationMap);
 usort($generations, function ($left, $right) {
-    if ($left === 'ไม่ระบุ') return 1;
-    if ($right === 'ไม่ระบุ') return -1;
+    if ($left === $right) return 0;
+
+    $leftIsNumber = ctype_digit((string) $left);
+    $rightIsNumber = ctype_digit((string) $right);
+
+    if (!$leftIsNumber) return 1;
+    if (!$rightIsNumber) return -1;
     return (int) $left <=> (int) $right;
 });
 
@@ -237,8 +252,10 @@ foreach ($programLines as $line) {
     $matrixColumns[] = (int) $line['column_width'] . 'px';
 }
 
-$treeCssVersion = filemtime(__DIR__ . '/../assets/css/student-tree-matrix.css');
-$treeJsVersion = filemtime(__DIR__ . '/../assets/js/program-lines.js');
+$treeCssPath = __DIR__ . '/../assets/css/student-tree-matrix.css';
+$treeJsPath = __DIR__ . '/../assets/js/program-lines.js';
+$treeCssVersion = is_file($treeCssPath) ? filemtime($treeCssPath) : '1';
+$treeJsVersion = is_file($treeJsPath) ? filemtime($treeJsPath) : '1';
 
 ob_start();
 ?>
@@ -333,7 +350,7 @@ ob_start();
                                                             <?php endforeach; ?>
                                                         </ul>
                                                     <?php endif; ?>
-                                                    <a href="profile.php?id=<?php echo (int) $member['id']; ?>" class="lineage-profile-link" onclick="event.stopPropagation();">ดูโปรไฟล์ →</a>
+                                                    <a href="profile.php?id=<?php echo (int) $member['id']; ?>" class="lineage-profile-link" aria-label="ดูโปรไฟล์ของ <?php echo h(studentTreeName($member)); ?>">ดูโปรไฟล์ →</a>
                                                 </div>
                                             </div>
                                         </article>
