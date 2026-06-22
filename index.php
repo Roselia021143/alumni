@@ -103,9 +103,9 @@ $landingJsVersion = filemtime(__DIR__ . '/assets/js/landing.js');
         <nav id="mainNav" class="main-nav" aria-label="เมนูหลัก">
             <!-- <a class="active" href="#home">หน้าหลัก</a>
             <a href="#about">เกี่ยวกับเรา</a>
-            <a href="#programs">สายรหัส</a>
-            <a href="#stats">สถิติ</a>
-            <a href="#contact">ติดต่อเรา</a> -->
+            <a href="#programs">สายรหัส</a>-->
+            <a href="https://cit.nsru.ac.th/">เว็บไซต์หลัก</a>
+            <a href="https://www.facebook.com/citnsru">ติดต่อเรา</a> 
         </nav>
 
         <a class="admin-link" href="admin/login.php">

@@ -19,6 +19,15 @@
     const pointers = new Map();
     let pinchDistance = 0;
     let pinchScale = 1;
+    let dragDistance = 0;
+    let pressedFlipCard = null;
+    let lastCardTapAt = 0;
+
+    function toggleFlipCard(card) {
+        if (!card) return;
+        const isFlipped = card.classList.toggle('is-flipped');
+        card.setAttribute('aria-pressed', String(isFlipped));
+    }
 
     function dimensions() {
         return { width: canvas.scrollWidth, height: canvas.scrollHeight };
@@ -112,12 +121,15 @@
             startY = event.clientY;
             startLeft = viewport.scrollLeft;
             startTop = viewport.scrollTop;
+            dragDistance = 0;
+            pressedFlipCard = event.target.closest('[data-flip-card]');
             viewport.classList.add('is-dragging');
         } else if (pointers.size === 2) {
             const points = Array.from(pointers.values());
             pinchDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
             pinchScale = scale;
             dragging = false;
+            pressedFlipCard = null;
         }
     });
 
@@ -133,22 +145,44 @@
             const middleY = (points[0].y + points[1].y) / 2 - rect.top;
             if (pinchDistance > 0) applyScale(pinchScale * distance / pinchDistance, middleX, middleY);
         } else if (dragging) {
+            dragDistance = Math.max(dragDistance, Math.hypot(event.clientX - startX, event.clientY - startY));
             viewport.scrollLeft = startLeft - (event.clientX - startX);
             viewport.scrollTop = startTop - (event.clientY - startY);
         }
     });
 
     function release(event) {
+        const shouldFlipCard = event.type === 'pointerup' && pointers.size === 1 && pressedFlipCard && dragDistance <= 6;
         pointers.delete(event.pointerId);
+
+        if (shouldFlipCard) {
+            toggleFlipCard(pressedFlipCard);
+            lastCardTapAt = Date.now();
+        }
+
         if (pointers.size === 0) {
             dragging = false;
+            pressedFlipCard = null;
             viewport.classList.remove('is-dragging');
         }
     }
 
     viewport.addEventListener('pointerup', release);
     viewport.addEventListener('pointercancel', release);
-    viewport.addEventListener('dblclick', fit);
+    viewport.addEventListener('dblclick', function (event) {
+        if (Date.now() - lastCardTapAt > 500 && !event.target.closest('[data-flip-card]')) {
+            fit();
+        }
+    });
+
+    document.querySelectorAll('[data-flip-card]').forEach(function (card) {
+        card.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleFlipCard(card);
+            }
+        });
+    });
     window.addEventListener('resize', function () {
         drawConnectors();
         fit();

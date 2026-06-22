@@ -264,28 +264,69 @@
 .student-lineage-map .lineage-node {
     position: relative;
     z-index: 3;
+    width: 230px;
+    min-height: 180px;
+    text-align: center;
+    perspective: 900px;
+    cursor: pointer;
+    outline: 0;
+}
+
+.student-lineage-map .matrix-cell.has-branches .lineage-node {
+    flex: 0 0 210px;
     width: 210px;
-    min-height: 84px;
+}
+
+.student-lineage-map .lineage-node-inner {
+    position: relative;
+    min-height: 180px;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.student-lineage-map .lineage-node.is-flipped .lineage-node-inner {
+    transform: rotateY(180deg);
+}
+
+.student-lineage-map .lineage-node-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    min-height: 180px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
     border: 1px solid rgba(102, 190, 173, 0.45);
     border-top: 3px solid var(--tc-green);
     border-radius: 12px;
     background: linear-gradient(145deg, rgba(18, 48, 70, 0.99), rgba(9, 27, 45, 0.99));
-    padding: 14px 16px;
-    text-align: center;
+    padding: 12px 13px;
     box-shadow: 0 11px 25px rgba(0, 0, 0, 0.24);
+    backface-visibility: hidden;
 }
 
-.student-lineage-map .matrix-cell.has-branches .lineage-node {
-    flex: 0 0 190px;
-    width: 190px;
+.student-lineage-map .lineage-node-back {
+    transform: rotateY(180deg);
+    border-color: rgba(255, 216, 87, 0.48);
+    background: linear-gradient(145deg, rgba(52, 53, 48, 0.98), rgba(12, 34, 45, 0.99));
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding: 10px 11px;
 }
 
-.student-lineage-map .lineage-node.is-root {
+.student-lineage-map .lineage-node:hover .lineage-node-face,
+.student-lineage-map .lineage-node:focus-visible .lineage-node-face {
+    border-color: var(--tc-green);
+    box-shadow: 0 0 26px rgba(66, 245, 155, 0.14), 0 11px 25px rgba(0, 0, 0, 0.24);
+}
+
+.student-lineage-map .lineage-node.is-root .lineage-node-face {
     border-color: rgba(255, 216, 87, 0.55);
     border-top-color: var(--tc-yellow);
 }
 
-.student-lineage-map .lineage-node.is-self {
+.student-lineage-map .lineage-node.is-self .lineage-node-face {
     border-color: var(--tc-green);
     background: linear-gradient(145deg, rgba(31, 82, 78, 0.99), rgba(9, 35, 49, 0.99));
     box-shadow: 0 0 28px rgba(66, 245, 155, 0.16), 0 11px 25px rgba(0, 0, 0, 0.24);
@@ -303,6 +344,119 @@
     color: var(--tc-green);
     font-size: 11px;
     font-weight: 600;
+}
+
+.student-lineage-map .lineage-headline {
+    margin: 4px 0 0 !important;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--tc-muted) !important;
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.student-lineage-map .lineage-flip-hint {
+    position: absolute;
+    right: 8px;
+    bottom: 5px;
+    color: rgba(183, 198, 216, 0.6);
+    font-size: 8px;
+}
+
+.student-lineage-map .lineage-relation-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    background: rgba(255, 216, 87, 0.12);
+    color: var(--tc-yellow);
+    padding: 3px 8px;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.student-lineage-map .lineage-node-back h3 {
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.student-lineage-map .lineage-node-back p {
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--tc-muted);
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.student-lineage-map .lineage-contact-list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    width: 100%;
+    text-align: left;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 5px;
+}
+
+.student-lineage-map .lineage-contact-list li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 9px;
+    line-height: 1.35;
+    color: var(--tc-text);
+}
+
+.student-lineage-map .lineage-contact-label {
+    flex: 0 0 65px;
+    color: var(--tc-muted);
+    font-weight: 600;
+    font-size: 8px;
+    text-align: left;
+}
+
+.student-lineage-map .lineage-contact-value {
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(210, 230, 245, 0.92);
+    font-size: 9px;
+}
+
+.student-lineage-map .lineage-contact-value.is-private {
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+}
+
+.student-lineage-map .lineage-no-contact {
+    display: block;
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(159, 176, 195, 0.55);
+    font-size: 9px;
+    font-style: italic;
+}
+
+.student-lineage-map .lineage-profile-link {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(66, 245, 155, 0.12);
+    color: var(--tc-green);
+    font-size: 9px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+
+.student-lineage-map .lineage-profile-link:hover {
+    background: rgba(66, 245, 155, 0.28);
+    color: #fff;
 }
 
 .student-lineage-map .map-hint {
@@ -337,5 +491,9 @@
 @media (prefers-reduced-motion: reduce) {
     .student-lineage-map * {
         scroll-behavior: auto !important;
+    }
+
+    .student-lineage-map .lineage-node-inner {
+        transition: none !important;
     }
 }

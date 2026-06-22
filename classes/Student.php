@@ -527,11 +527,18 @@ class Student
 
     public function publicProgramForest(array $keywords)
     {
+        $emailVisibleCol = $this->hasEmailVisibleColumn() ? ', s.email_visible' : '';
         $result = $this->conn->query(
-            'SELECT id, first_name, last_name, nickname, generation, major, parent_student_id
-             FROM students
-             WHERE major IS NOT NULL AND major <> ""
-             ORDER BY generation ASC, student_code ASC'
+            'SELECT s.id, s.first_name, s.last_name, s.nickname, s.generation, s.major, s.faculty,
+                    s.parent_student_id, s.student_code, s.phone, s.facebook, s.instagram,
+                    s.line_id_contact, s.headline,
+                    s.student_code_visible, s.phone_visible, s.facebook_visible,
+                    s.instagram_visible, s.line_id_contact_visible' . $emailVisibleCol . ',
+                    su.email
+             FROM students s
+             LEFT JOIN student_users su ON su.student_id = s.id
+             WHERE s.major IS NOT NULL AND s.major <> ""
+             ORDER BY s.generation ASC, s.student_code ASC'
         );
         $students = [];
 

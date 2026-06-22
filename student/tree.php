@@ -15,12 +15,112 @@ if (!$student) {
     exit;
 }
 
+$currentLineage = $studentModel->getLineage($studentId);
+$relationLabels = [$studentId => 'ตัวคุณ'];
+
+if ($currentLineage) {
+    foreach ($currentLineage['ancestors'] as $ancestor) {
+        $relationLabels[(int) $ancestor['id']] = 'พี่รหัส ชั้นที่ ' . (int) $ancestor['line_level'];
+    }
+
+    foreach ($currentLineage['descendants'] as $descendant) {
+        $relationLabels[(int) $descendant['id']] = 'น้องรหัส ชั้นที่ ' . (int) $descendant['line_level'];
+    }
+}
+
 function studentTreeName($student)
 {
     $name = trim((string) $student['first_name'] . ' ' . (string) $student['last_name']);
     $nickname = trim((string) $student['nickname']);
 
     return $nickname === '' ? $name : $name . ' (' . $nickname . ')';
+}
+
+function studentTreeContactItems($member, $isSelf)
+{
+    $items = [];
+
+    // รหัสนักศึกษา
+    $hasStudentCode = ($isSelf || !empty($member['student_code_visible'])) && trim((string) ($member['student_code'] ?? '')) !== '';
+    $items[] = [
+        'label' => 'รหัสนักศึกษา',
+        'value' => $hasStudentCode ? $member['student_code'] : 'ไม่เปิดเผย',
+        'is_private' => !$hasStudentCode
+    ];
+
+    // ปีการศึกษา
+    $gen = trim((string) ($member['generation'] ?? ''));
+    $items[] = [
+        'label' => 'ปีการศึกษา',
+        'value' => $gen !== '' ? $gen : 'ไม่ระบุ',
+        'is_private' => false
+    ];
+
+    // คณะ
+    $fac = trim((string) ($member['faculty'] ?? ''));
+    $items[] = [
+        'label' => 'คณะ',
+        'value' => $fac !== '' ? $fac : 'ไม่ระบุ',
+        'is_private' => false
+    ];
+
+    // สาขา
+    $maj = trim((string) ($member['major'] ?? ''));
+    $items[] = [
+        'label' => 'สาขา',
+        'value' => $maj !== '' ? $maj : 'ไม่ระบุ',
+        'is_private' => false
+    ];
+
+    // เบอร์โทร
+    $hasPhone = ($isSelf || !empty($member['phone_visible'])) && trim((string) ($member['phone'] ?? '')) !== '';
+    if ($hasPhone) {
+        $phone = preg_replace('/\D+/', '', $member['phone']);
+        $formattedPhone = strlen($phone) === 10
+            ? substr($phone, 0, 3) . '-' . substr($phone, 3, 3) . '-' . substr($phone, 6, 4)
+            : $phone;
+    } else {
+        $formattedPhone = 'ไม่เปิดเผย';
+    }
+    $items[] = [
+        'label' => 'เบอร์โทร',
+        'value' => $formattedPhone,
+        'is_private' => !$hasPhone
+    ];
+
+    // Email
+    $hasEmail = ($isSelf || !empty($member['email_visible'])) && trim((string) ($member['email'] ?? '')) !== '';
+    $items[] = [
+        'label' => 'Email',
+        'value' => $hasEmail ? $member['email'] : 'ไม่เปิดเผย',
+        'is_private' => !$hasEmail
+    ];
+
+    // Facebook
+    $hasFb = ($isSelf || !empty($member['facebook_visible'])) && trim((string) ($member['facebook'] ?? '')) !== '';
+    $items[] = [
+        'label' => 'Facebook',
+        'value' => $hasFb ? $member['facebook'] : 'ไม่เปิดเผย',
+        'is_private' => !$hasFb
+    ];
+
+    // Instagram
+    $hasIg = ($isSelf || !empty($member['instagram_visible'])) && trim((string) ($member['instagram'] ?? '')) !== '';
+    $items[] = [
+        'label' => 'Instagram',
+        'value' => $hasIg ? $member['instagram'] : 'ไม่เปิดเผย',
+        'is_private' => !$hasIg
+    ];
+
+    // Line ID
+    $hasLine = ($isSelf || !empty($member['line_id_contact_visible'])) && trim((string) ($member['line_id_contact'] ?? '')) !== '';
+    $items[] = [
+        'label' => 'Line ID',
+        'value' => $hasLine ? $member['line_id_contact'] : 'ไม่เปิดเผย',
+        'is_private' => !$hasLine
+    ];
+
+    return $items;
 }
 
 function collectStudentTreeMembers($student, $childrenByParent, &$members, &$visited)
@@ -120,8 +220,8 @@ foreach ($visibleLines as $lineIndex => $line) {
         'members_by_generation' => $membersByGeneration,
         'is_current' => $line['is_current'],
         'column_width' => $largestGenerationGroup > 1
-            ? max(240, ($largestGenerationGroup * 190) + (($largestGenerationGroup - 1) * 12) + 28)
-            : 240,
+            ? max(260, ($largestGenerationGroup * 210) + (($largestGenerationGroup - 1) * 12) + 28)
+            : 260,
     ];
 }
 
@@ -192,13 +292,50 @@ ob_start();
                                     <span class="matrix-empty-mark">—</span>
                                 <?php else: ?>
                                     <?php foreach ($members as $member): ?>
+                                        <?php
+                                        $memberId = (int) $member['id'];
+                                        $isSelf = $memberId === (int) $studentId;
+                                        $relation = isset($relationLabels[$memberId])
+                                            ? $relationLabels[$memberId]
+                                            : ($line['is_current'] ? 'สมาชิกในสายเดียวกัน' : 'สมาชิกสาขาเดียวกัน');
+                                        $contactItems = studentTreeContactItems($member, $isSelf);
+                                        $memberHeadline = trim((string) (isset($member['headline']) ? $member['headline'] : ''));
+                                        ?>
                                         <article
-                                            class="lineage-node <?php echo (int) $member['id'] === (int) $studentId ? 'is-self' : ''; ?> <?php echo (int) $member['id'] === (int) $line['root']['id'] ? 'is-root' : ''; ?>"
+                                            class="lineage-node <?php echo $isSelf ? 'is-self' : ''; ?> <?php echo (int) $member['id'] === (int) $line['root']['id'] ? 'is-root' : ''; ?>"
                                             data-node-id="<?php echo (int) $member['id']; ?>"
                                             <?php if ($member['parent_student_id'] !== null): ?>data-parent-id="<?php echo (int) $member['parent_student_id']; ?>"<?php endif; ?>
+                                            data-flip-card
+                                            role="button"
+                                            tabindex="0"
+                                            aria-pressed="false"
+                                            aria-label="ดูข้อมูลของ <?php echo h(studentTreeName($member)); ?>"
                                         >
-                                            <h3><?php echo h(studentTreeName($member)); ?></h3>
-                                            <p><?php echo (int) $member['id'] === (int) $studentId ? 'คุณ · ' : ''; ?>ปีการศึกษา <?php echo h($generation); ?></p>
+                                            <div class="lineage-node-inner">
+                                                <div class="lineage-node-face lineage-node-front">
+                                                    <h3><?php echo h(studentTreeName($member)); ?></h3>
+                                                    <?php if ($memberHeadline !== ''): ?>
+                                                        <p class="lineage-headline"><?php echo h($memberHeadline); ?></p>
+                                                    <?php endif; ?>
+                                                    <p><?php echo $isSelf ? 'คุณ · ' : ''; ?>ปีการศึกษา <?php echo h($generation); ?></p>
+                                                    <span class="lineage-flip-hint">แตะเพื่อดูข้อมูล</span>
+                                                </div>
+                                                <div class="lineage-node-face lineage-node-back">
+                                                    <span class="lineage-relation-badge"><?php echo h($relation); ?></span>
+                                                    <h3><?php echo h(studentTreeName($member)); ?></h3>
+                                                    <?php if (!empty($contactItems)): ?>
+                                                        <ul class="lineage-contact-list">
+                                                            <?php foreach ($contactItems as $ci): ?>
+                                                                <li>
+                                                                    <span class="lineage-contact-label"><?php echo h($ci['label']); ?></span>
+                                                                    <span class="lineage-contact-value<?php echo !empty($ci['is_private']) ? ' is-private' : ''; ?>"><?php echo h($ci['value']); ?></span>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                    <?php endif; ?>
+                                                    <a href="profile.php?id=<?php echo (int) $member['id']; ?>" class="lineage-profile-link" onclick="event.stopPropagation();">ดูโปรไฟล์ →</a>
+                                                </div>
+                                            </div>
                                         </article>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -209,7 +346,7 @@ ob_start();
             </div>
         </div>
     </div>
-    <p class="map-hint">ลากเพื่อเลื่อนดู · หมุนล้อเมาส์หรือกางสองนิ้วเพื่อซูม · ดับเบิลคลิกเพื่อพอดีจอ</p>
+    <p class="map-hint">แตะการ์ดเพื่อดูข้อมูลและช่องทางติดต่อ · ลากเพื่อเลื่อนดู · หมุนล้อเมาส์หรือกางสองนิ้วเพื่อซูม</p>
 </section>
 <?php
 $content = ob_get_clean();
